@@ -7,7 +7,7 @@ declared in the robot's ``robot.yaml`` (read from ``setup_path``), and
 ``use_sim_time`` is forwarded so the demo behaves correctly in simulation.
 """
 
-import os
+from pathlib import Path
 
 from clearpath_config.clearpath_config import ClearpathConfig
 from launch_ros.actions import Node, PushRosNamespace
@@ -44,8 +44,7 @@ def launch_setup(context, *args, **kwargs):
     language = LaunchConfiguration('language')
 
     # Parse robot YAML and resolve the namespace from it.
-    clearpath_config = ClearpathConfig(
-        os.path.join(str(setup_path.perform(context)), 'robot.yaml'))
+    clearpath_config = ClearpathConfig(str(Path(setup_path.perform(context)) / 'robot.yaml'))
     namespace = clearpath_config.system.namespace
 
     cpp_node = Node(
