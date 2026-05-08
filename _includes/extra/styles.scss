@@ -1,0 +1,6 @@
+// Project-level overrides for clearpathrobotics/jekyll-rtd-theme.
+// The theme caps .content-wrap at 980px which leaves a large empty
+// gutter on wide screens. Let the content fill the available width.
+.content-wrap {
+    max-width: none;
+}
