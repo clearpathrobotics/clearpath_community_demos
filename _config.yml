@@ -19,7 +19,7 @@ exclude:
   - Gemfile
   - Gemfile.lock
   - vendor
-  - demos
+  - demos/
   - README.md
 
 plugins:
