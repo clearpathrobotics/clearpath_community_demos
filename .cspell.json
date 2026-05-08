@@ -43,7 +43,11 @@
     "clearpath",
     "clearpathrobotics",
     "colcon",
+    "cosp",
+    "cosy",
     "dingo",
+    "endcapture",
+    "endcomment",
     "fastrtps",
     "frontmatter",
     "GNUCXX",
@@ -59,12 +63,15 @@
     "ridgeback",
     "rockwell",
     "schematypens",
+    "siny",
+    "surl",
     "venv",
     "warthog",
     "waypoint",
     "waypoints",
     "Wextra",
     "Wpedantic",
+    "xmlschema",
     "yaw"
   ]
 }
