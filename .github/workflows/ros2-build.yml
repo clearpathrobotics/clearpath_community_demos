@@ -1,0 +1,28 @@
+name: ROS 2 build
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  colcon-build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ros_distro: [jazzy]
+    container:
+      image: ros:${{ matrix.ros_distro }}-ros-base
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install rosdep dependencies
+        shell: bash
+        run: |
+          apt-get update
+          rosdep update
+          rosdep install --from-paths demos --ignore-src -r -y
+      - name: Build
+        shell: bash
+        run: |
+          source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+          colcon build --base-paths demos

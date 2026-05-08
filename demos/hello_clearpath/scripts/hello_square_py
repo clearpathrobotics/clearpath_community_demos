@@ -1,0 +1,10 @@
+#!/usr/bin/env python3
+# Copyright (c) 2026, Clearpath Robotics, by Rockwell Automation, and
+# community contributors.
+# Licensed under the Apache License, Version 2.0.
+"""Console entry point for the Python hello_square node."""
+
+from hello_clearpath.hello_square import main
+
+if __name__ == '__main__':
+    main()

@@ -1,0 +1,42 @@
+line-length = 99
+
+
+[lint]
+preview = true # Needed for some pycodestyle rules
+select = [
+    "E",   # pycodestyle
+    "W",   # pycodestyle
+    "F",   # Pyflakes
+    "A",   # flake8-builtins
+    "PLE", # pylint
+    "PLW", # pylint
+    "PLC", # pylint
+    "I",   # isort
+    "D",   # flake8-docstrings
+    "B",   # flake8-bugbear
+    "S",   # flake8-bandit
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "PIE", # flake8-pie
+    "RET", # flake8-return
+    "SIM", # flake8-simplify
+    "TID", # flake8-tidy-imports
+    "RUF", # Ruff-specific rules
+    "YTT", # flake8-2020
+    "UP",  # pyupgrade
+    "C4",  # flake8-comprehensions
+    "PTH", # flake8-use-pathlib
+    "G",   # flake8-logging-format
+    "INP", # flake8-no-pep420
+    "T20", # flake8-print
+]
+ignore = ['D100','D101','D102','D103','D104','D105','D106','D107','D203','D212','D404','D415']
+
+[lint.isort]
+force-sort-within-sections = true
+order-by-type = false
+
+[format]
+preview = true
+quote-style = "single"
+docstring-code-format = true

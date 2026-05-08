@@ -1,0 +1,4 @@
+debug:
+  compress: false
+  dist: true
+  shortcodes: true

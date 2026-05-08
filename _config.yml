@@ -1,0 +1,32 @@
+title: Clearpath Community Demos
+lang: en
+description: Community-contributed demos for Clearpath Robotics, by Rockwell Automation platforms
+repository: clearpathrobotics/clearpath_community_demos
+domain: clearpathrobotics.github.io
+url: https://clearpathrobotics.github.io
+baseurl: /clearpath_community_demos
+
+remote_theme: clearpathrobotics/jekyll-rtd-theme
+
+readme_index:
+  with_frontmatter: true
+
+include:
+  - _includes
+
+exclude:
+  - Makefile
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - demos
+  - README.md
+
+plugins:
+  - jemoji
+  - jekyll-avatar
+  - jekyll-mentions
+  - jekyll-tabs
+  - jekyll-remote-theme
+
+github: [metadata]

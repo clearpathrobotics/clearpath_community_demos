@@ -1,0 +1,27 @@
+# Jekyll
+.jekyll-metadata
+.jekyll-cache/
+_site/
+.sass-cache/
+
+# Bundler / gems
+Gemfile.lock
+.bundle/
+vendor/
+
+# ROS 2 / colcon build artifacts
+build/
+install/
+log/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+
+# Editors / OS
+.vscode/
+.idea/
+*.swp
+.DS_Store

@@ -1,0 +1,75 @@
+# cspell:ignore EDITMSG
+# See https://pre-commit.com for hook details.
+# Install locally with:
+#   pip install pre-commit
+#   pre-commit install
+
+default_stages: [pre-commit]
+default_install_hook_types: [pre-commit, commit-msg]
+repos:
+  # Standard hooks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-ast
+      - id: check-case-conflict
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+        args: ["--allow-multiple-documents"]
+      - id: check-xml
+      - id: debug-statements
+      - id: detect-aws-credentials
+        args: ["--allow-missing-credentials"]
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+      - id: fix-byte-order-marker
+
+  # C/C++ formatting.
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    rev: v22.1.4
+    hooks:
+      - id: clang-format
+
+  # Spell checking.
+  - repo: https://github.com/streetsidesoftware/cspell-cli
+    rev: v10.0.0
+    hooks:
+      - id: cspell # Spell check changed files
+        args:
+          - --no-must-find-files
+          - --no-progress
+          - --no-summary
+          - --show-context
+          - --show-suggestions
+          - --gitignore
+          - --files
+        additional_dependencies: ["@cspell/dict-en-ca"]
+      - id: cspell # Spell check the commit message
+        name: check commit message spelling
+        args:
+          - --no-must-find-files
+          - --no-progress
+          - --no-summary
+          - --language-id cpp
+          - --files
+          - .git/COMMIT_EDITMSG
+        stages: [commit-msg]
+        always_run: true
+        additional_dependencies: ["@cspell/dict-en-ca"]
+
+  # Python lint/format.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.12
+    hooks:
+      - id: ruff-check
+      - id: ruff-format
+
+  # GitHub Actions workflow linting.
+  - repo: https://github.com/rhysd/actionlint
+    rev: v1.7.4
+    hooks:
+      - id: actionlint

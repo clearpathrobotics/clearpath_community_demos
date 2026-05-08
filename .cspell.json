@@ -1,0 +1,70 @@
+{
+  "ignorePaths": [
+    ".gitignore",
+    ".ruff.toml",
+    "**/node_modules/**",
+    ".git/*/**",
+    ".vscode",
+    "**/build/**",
+    "**/install/**",
+    "**/log/**",
+    "**/_site/**",
+    "**/vendor/**",
+    ".clang-format",
+    ".github/workflows/**"
+  ],
+  "import": [
+    "@cspell/dict-en-ca/cspell-ext.json"
+  ],
+  "language": "en-CA,en",
+  "languageSettings": [
+    {
+      "ignoreRegExpList": [
+        "pathname"
+      ],
+      "languageId": "cmake",
+      "dictionaries": [
+        "cpp"
+      ]
+    }
+  ],
+  "patterns": [
+    {
+      "name": "pathname",
+      "pattern": "(\\.*[\\.\\w-]+)?(\\/(\\.*[\\.\\w-]+)?)"
+    }
+  ],
+  "version": "0.2",
+  "words": [
+    "aligncenter",
+    "ament",
+    "amcl",
+    "buildtool",
+    "clearpath",
+    "clearpathrobotics",
+    "colcon",
+    "dingo",
+    "fastrtps",
+    "frontmatter",
+    "GNUCXX",
+    "husky",
+    "jackal",
+    "jazzy",
+    "jekyll",
+    "jemoji",
+    "livereload",
+    "rclcpp",
+    "rclpy",
+    "rosdep",
+    "ridgeback",
+    "rockwell",
+    "schematypens",
+    "venv",
+    "warthog",
+    "waypoint",
+    "waypoints",
+    "Wextra",
+    "Wpedantic",
+    "yaw"
+  ]
+}
