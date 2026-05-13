@@ -27,6 +27,23 @@ is shipped with the demo as a reference for the
 [`clearpath_config`](https://docs.clearpathrobotics.com/docs/ros/config/yaml/overview/)
 that was used to test it. Update to match your robot before deploying.
 
+## Build
+
+Assumes you have already
+[cloned the repository](../getting_started/building.md) into
+`~/community_ws/src`.
+
+Install only this demo's dependencies, then build only this package and the
+packages it depends on:
+
+```bash
+cd ~/community_ws
+rosdep install --from-paths src/clearpath_community_demos/demos/hello_clearpath \
+    --ignore-src -r -y
+colcon build --symlink-install --packages-up-to hello_clearpath
+source install/setup.bash
+```
+
 ## Run
 
 The launch file reads `robot.yaml` from the Clearpath setup path
