@@ -9,26 +9,31 @@ Community demos may have unrelated — and sometimes conflicting —
 dependencies, so they are not intended to share a workspace. The CI for this
 repository follows the same pattern: every demo is built in isolation.
 
-Every demo ships a [`vcstool`](https://github.com/dirk-thomas/vcstool)
-`.repos` file at `demos/<demo_name>/<demo_name>.repos`. This file is the
-single source of truth for the demo's source-level dependencies (this
-repository, plus any forks or unreleased packages the demo needs).
-
-The build steps for every demo follow the same shape:
-
-1. Create `~/<demo_name>_ws/src/`.
-2. `vcs import src < <demo_name>.repos` to populate it.
-3. `rosdep install --from-paths src --ignore-src -r -y`.
-4. `colcon build --symlink-install`.
-
-The exact commands (with the right URLs filled in) live on each demo's own
-page under **Build**.
-
-## Prerequisite tools
+The convention used throughout this site is to create one workspace per demo
+at `~/<demo_name>_ws/`, clone this repository into its `src/` directory, and
+build only that demo:
 
 ```bash
-sudo apt install -y python3-vcstool
+mkdir -p ~/<demo_name>_ws/src
+cd ~/<demo_name>_ws/src
+git clone https://github.com/clearpathrobotics/clearpath_community_demos.git
+
+cd ~/<demo_name>_ws
+rosdep install \
+    --from-paths src/clearpath_community_demos/demos/<demo_name> \
+    --ignore-src -r -y
+colcon build --symlink-install --packages-up-to <demo_name>
+source install/setup.bash
 ```
 
-(`git`, `colcon`, and `rosdep` are covered in
-[Prerequisites](prerequisites.md).)
+The exact commands (with the demo name filled in) live on each demo's own
+page under **Build**.
+
+## Demos with extra source dependencies
+
+If a demo needs source repositories beyond this one (for example, an
+unreleased fork or a sibling repo), it ships a
+[`vcstool`](https://github.com/dirk-thomas/vcstool) `.repos` file at
+`demos/<demo_name>/<demo_name>.repos`. In that case the demo's own page
+includes an additional `vcs import` step before `rosdep install`. Most demos
+do not need one.

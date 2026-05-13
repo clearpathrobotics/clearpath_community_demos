@@ -51,15 +51,22 @@ demo and its documentation together.
 
 ## Building the demos
 
-See [Building the Demos](getting_started/building.md). In short:
+Each demo is built in its own dedicated colcon workspace — community demos
+may have unrelated (and sometimes conflicting) dependencies, so they are not
+intended to share a workspace. See [Workspaces](getting_started/building.md)
+for the general pattern, and each demo's own page for the exact commands.
+
+In short, for a demo named `<demo_name>`:
 
 ```bash
-mkdir -p ~/community_ws/src
-cd ~/community_ws/src
+mkdir -p ~/<demo_name>_ws/src
+cd ~/<demo_name>_ws/src
 git clone https://github.com/clearpathrobotics/clearpath_community_demos.git
-cd ~/community_ws
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --symlink-install
+cd ~/<demo_name>_ws
+rosdep install \
+    --from-paths src/clearpath_community_demos/demos/<demo_name> \
+    --ignore-src -r -y
+colcon build --symlink-install --packages-up-to <demo_name>
 ```
 
 ## Building the docs site locally

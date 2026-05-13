@@ -30,18 +30,22 @@ that was used to test it. Update to match your robot before deploying.
 ## Build
 
 This demo is built in its own dedicated workspace. See
-[Workspaces](../getting_started/building.md) for the general pattern. The
-source repositories required by the demo are declared in
-[`hello_clearpath.repos`](https://github.com/clearpathrobotics/clearpath_community_demos/blob/main/demos/hello_clearpath/hello_clearpath.repos).
+[Workspaces](../getting_started/building.md) for the general pattern.
+
+Clone the repository into a fresh `hello_clearpath_ws` workspace, install
+only this demo's dependencies, and build only this package and the packages
+it depends on:
 
 ```bash
 mkdir -p ~/hello_clearpath_ws/src
-cd ~/hello_clearpath_ws
-vcs import src < <(curl -fsSL \
-    https://raw.githubusercontent.com/clearpathrobotics/clearpath_community_demos/main/demos/hello_clearpath/hello_clearpath.repos)
+cd ~/hello_clearpath_ws/src
+git clone https://github.com/clearpathrobotics/clearpath_community_demos.git
 
-rosdep install --from-paths src --ignore-src -r -y
-colcon build --symlink-install
+cd ~/hello_clearpath_ws
+rosdep install \
+    --from-paths src/clearpath_community_demos/demos/hello_clearpath \
+    --ignore-src -r -y
+colcon build --symlink-install --packages-up-to hello_clearpath
 source install/setup.bash
 ```
 

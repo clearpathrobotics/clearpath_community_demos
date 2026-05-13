@@ -19,22 +19,26 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          path: _checkout
-      - name: Import demo sources via vcs
+          path: src/clearpath_community_demos
+      - name: Import extra demo sources (if any)
         shell: bash
         run: |
-          apt-get update
-          apt-get install -y python3-vcstool
-          mkdir -p src
-          vcs import src \
-            < _checkout/demos/${{ matrix.demo }}/${{ matrix.demo }}.repos
+          repos_file=src/clearpath_community_demos/demos/${{ matrix.demo }}/${{ matrix.demo }}.repos
+          if [[ -f "$repos_file" ]]; then
+            apt-get update
+            apt-get install -y python3-vcstool
+            vcs import src < "$repos_file"
+          fi
       - name: Install rosdep dependencies
         shell: bash
         run: |
+          apt-get update
           rosdep update
-          rosdep install --from-paths src --ignore-src -r -y
+          rosdep install \
+            --from-paths src/clearpath_community_demos/demos/${{ matrix.demo }} \
+            --ignore-src -r -y
       - name: Build
         shell: bash
         run: |
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
-          colcon build --base-paths src
+          colcon build --packages-up-to ${{ matrix.demo }}
