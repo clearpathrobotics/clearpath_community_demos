@@ -29,18 +29,19 @@ that was used to test it. Update to match your robot before deploying.
 
 ## Build
 
-Assumes you have already
-[cloned the repository](../getting_started/building.md) into
-`~/community_ws/src`.
-
-Install only this demo's dependencies, then build only this package and the
-packages it depends on:
+This demo is built in its own dedicated workspace. See
+[Workspaces](../getting_started/building.md) for the general pattern. The
+source repositories required by the demo are declared in
+[`hello_clearpath.repos`](https://github.com/clearpathrobotics/clearpath_community_demos/blob/main/demos/hello_clearpath/hello_clearpath.repos).
 
 ```bash
-cd ~/community_ws
-rosdep install --from-paths src/clearpath_community_demos/demos/hello_clearpath \
-    --ignore-src -r -y
-colcon build --symlink-install --packages-up-to hello_clearpath
+mkdir -p ~/hello_clearpath_ws/src
+cd ~/hello_clearpath_ws
+vcs import src < <(curl -fsSL \
+    https://raw.githubusercontent.com/clearpathrobotics/clearpath_community_demos/main/demos/hello_clearpath/hello_clearpath.repos)
+
+rosdep install --from-paths src --ignore-src -r -y
+colcon build --symlink-install
 source install/setup.bash
 ```
 
@@ -54,7 +55,7 @@ both simulation and on a real robot.
 With your robot running and a `/cmd_vel` consumer active:
 
 ```bash
-source ~/community_ws/install/setup.bash
+source ~/hello_clearpath_ws/install/setup.bash
 
 # C++ implementation (default), real robot
 ros2 launch hello_clearpath hello_clearpath.launch.py

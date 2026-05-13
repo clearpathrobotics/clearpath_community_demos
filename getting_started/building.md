@@ -2,22 +2,33 @@
 sort: 2
 ---
 
-# Cloning the Repository
+# Workspaces
 
-The community demos live under the [`demos/`](https://github.com/clearpathrobotics/clearpath_community_demos/tree/main/demos)
-directory of this repository. Each subfolder is an independent ROS 2 package
-(or set of packages) that you can build with `colcon`.
+Each community demo is built in its own dedicated colcon workspace.
+Community demos may have unrelated — and sometimes conflicting —
+dependencies, so they are not intended to share a workspace. The CI for this
+repository follows the same pattern: every demo is built in isolation.
 
-Clone the repository into a ROS 2 workspace:
+Every demo ships a [`vcstool`](https://github.com/dirk-thomas/vcstool)
+`.repos` file at `demos/<demo_name>/<demo_name>.repos`. This file is the
+single source of truth for the demo's source-level dependencies (this
+repository, plus any forks or unreleased packages the demo needs).
+
+The build steps for every demo follow the same shape:
+
+1. Create `~/<demo_name>_ws/src/`.
+2. `vcs import src < <demo_name>.repos` to populate it.
+3. `rosdep install --from-paths src --ignore-src -r -y`.
+4. `colcon build --symlink-install`.
+
+The exact commands (with the right URLs filled in) live on each demo's own
+page under **Build**.
+
+## Prerequisite tools
 
 ```bash
-mkdir -p ~/community_ws/src
-cd ~/community_ws/src
-git clone https://github.com/clearpathrobotics/clearpath_community_demos.git
+sudo apt install -y python3-vcstool
 ```
 
-Each demo is built independently — community demos may have unrelated
-dependencies, so building all of them at once is rarely what you want. See the
-**Build** section on each individual demo's page for instructions on
-installing only that demo's dependencies and building only the packages it
-needs.
+(`git`, `colcon`, and `rosdep` are covered in
+[Prerequisites](prerequisites.md).)

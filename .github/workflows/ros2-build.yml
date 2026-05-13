@@ -11,18 +11,30 @@ jobs:
       fail-fast: false
       matrix:
         ros_distro: [jazzy]
+        demo:
+          - hello_clearpath
     container:
       image: ros:${{ matrix.ros_distro }}-ros-base
+    name: ${{ matrix.demo }} (${{ matrix.ros_distro }})
     steps:
       - uses: actions/checkout@v6
-      - name: Install rosdep dependencies
+        with:
+          path: _checkout
+      - name: Import demo sources via vcs
         shell: bash
         run: |
           apt-get update
+          apt-get install -y python3-vcstool
+          mkdir -p src
+          vcs import src \
+            < _checkout/demos/${{ matrix.demo }}/${{ matrix.demo }}.repos
+      - name: Install rosdep dependencies
+        shell: bash
+        run: |
           rosdep update
-          rosdep install --from-paths demos --ignore-src -r -y
+          rosdep install --from-paths src --ignore-src -r -y
       - name: Build
         shell: bash
         run: |
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
-          colcon build --base-paths demos
+          colcon build
