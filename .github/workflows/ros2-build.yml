@@ -37,4 +37,4 @@ jobs:
         shell: bash
         run: |
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
-          colcon build
+          colcon build --base-paths src
