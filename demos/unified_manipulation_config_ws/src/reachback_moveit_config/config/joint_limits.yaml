@@ -1,0 +1,84 @@
+# joint_limits.yaml allows the dynamics properties specified in the URDF to be overwritten or augmented as needed
+
+# Source: https://github.com/DoosanRobotics/doosan-robot2/blob/428b4bffd70224dd17d7985aad398a1c8cac6b27/dsr_moveit2/dsr_moveit_config_h2017/config/joint_limits.yaml
+
+# For beginners, we downscale velocity and acceleration limits.
+# You can always specify higher scaling factors (<= 1.0) in your motion requests.  # Increase the values below to 1.0 to always move at maximum speed.
+/**:
+  ros__parameters:
+    robot_description_planning:
+      default_velocity_scaling_factor: 1.0
+      default_acceleration_scaling_factor: 1.0
+
+      # Specific joint properties can be changed with the keys [max_position, min_position, max_velocity, max_acceleration]
+      # Joint limits can be turned off with [has_velocity_limits, has_acceleration_limits]
+      joint_limits:
+        arm_joint_1:
+          has_velocity_limits: true
+          max_velocity: 1.3963
+          has_acceleration_limits: true
+          max_acceleration: 0.734
+          min_position: -6.2832
+          max_position: 6.2832
+        arm_joint_2:
+          has_velocity_limits: true
+          max_velocity: 1.3963
+          has_acceleration_limits: true
+          max_acceleration: 0.664
+          min_position: -2.1817
+          max_position: 2.1817
+        arm_joint_3:
+          has_velocity_limits: true
+          max_velocity: 1.3963
+          has_acceleration_limits: true
+          max_acceleration: 0.734
+          min_position: -2.7925
+          max_position: 2.7925
+        arm_joint_4:
+          has_velocity_limits: true
+          max_velocity: 3.1416
+          has_acceleration_limits: true
+          max_acceleration: 1.396
+          min_position: -6.2832
+          max_position: 6.2832
+        arm_joint_5:
+          has_velocity_limits: true
+          max_velocity: 3.1416
+          has_acceleration_limits: true
+          max_acceleration: 1.396
+          min_position: -6.2832
+          max_position: 6.2832
+        arm_joint_6:
+          has_velocity_limits: true
+          max_velocity: 3.1416
+          has_acceleration_limits: true
+          max_acceleration: 2.094
+          min_position: -6.2832
+          max_position: 6.2832
+
+        # The following are mobile base velocity limits
+        base_joint/x:
+          has_velocity_limits: true
+          max_velocity: 1.3
+          has_acceleration_limits: true
+          max_acceleration: 1.0
+        base_joint/y:
+          has_velocity_limits: true
+          max_velocity: 1.3
+          has_acceleration_limits: true
+          max_acceleration: 1.0
+        base_joint/theta:
+          has_velocity_limits: true
+          max_velocity: 4.0
+          has_acceleration_limits: true
+          max_acceleration: 3.0
+        arm_finger_a_joint:
+          has_velocity_limits: true
+          max_velocity: 0.02 # Divide by 2 to get per-finger velocity limits
+          has_acceleration_limits: true
+          max_acceleration: 1.0 # This value is from moveit_resources as it is not specified in the datasheet
+        arm_finger_b_joint:
+          has_velocity_limits: true
+          max_velocity: 0.02 # Divide by 2 to get per-finger velocity limits
+          has_acceleration_limits: true
+          max_acceleration: 1.0 # This value is from moveit_resources as it is not specified in the datasheet

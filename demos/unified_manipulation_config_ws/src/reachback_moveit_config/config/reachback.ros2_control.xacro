@@ -1,0 +1,102 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:macro name="reachback_ros2_control" params="name initial_positions_file">
+        <xacro:property name="initial_positions" value="${xacro.load_yaml(initial_positions_file)['initial_positions']}"/>
+
+        <!-- R100 ros2_control tag is part of the robot_description -->
+        <ros2_control name="${name}_hardware" type="system">
+            <hardware>
+                <plugin>mock_components/GenericSystem</plugin>
+            </hardware>
+            <joint name="arm_joint_1">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['arm_joint_1']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="arm_joint_2">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['arm_joint_2']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="arm_joint_3">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['arm_joint_3']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="arm_joint_4">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['arm_joint_4']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="arm_joint_5">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['arm_joint_5']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="arm_joint_6">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['arm_joint_6']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+
+            <joint name="base_joint">
+                <command_interface name="x/position"/>
+                <state_interface name="x/position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="x/velocity"/>
+
+                <command_interface name="y/position"/>
+                <state_interface name="y/position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="y/velocity"/>
+
+                <command_interface name="theta/position"/>
+                <state_interface name="theta/position">
+                  <param name="initial_value">0.0</param>
+                </state_interface>
+                <state_interface name="theta/velocity"/>
+            </joint>
+            <joint name="arm_finger_b_joint">
+              <command_interface name="position" />
+              <state_interface name="position">
+                <param name="initial_value">${initial_positions['finger_b_joint']}</param>
+              </state_interface>
+              <state_interface name="velocity" />
+              <state_interface name="effort" />
+            </joint>
+            <joint name="arm_finger_a_joint">
+              <state_interface name="position">
+                <param name="initial_value">${initial_positions['finger_a_joint']}</param>
+              </state_interface>
+              <state_interface name="velocity" />
+              <state_interface name="effort" />
+            </joint>
+        </ros2_control>
+        <link name="odom"/>
+
+        <!--
+        This is NOT a real joint and is not affected by joint_states!
+        Because it is a multi-DOF joint, its state will not be published to the joint_states topic.
+        This means its transform will not be published by robot_state_publisher.
+        The odom -> base_link transform will be published instead by the mecanum_drive_controller.
+        -->
+        <joint name="base_joint" type="planar">
+          <parent link="odom"/>
+          <child link="base_link"/>
+        </joint>
+    </xacro:macro>
+</robot>

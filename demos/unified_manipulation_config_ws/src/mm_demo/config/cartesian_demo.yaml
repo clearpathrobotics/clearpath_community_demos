@@ -1,0 +1,5 @@
+/**:
+  ros__parameters:
+    group_name: "arm_base"
+    num_retries: 100
+    fraction: 0.8

@@ -71,7 +71,7 @@ Other guidelines:
 ## License
 
 By contributing, you agree that your contributions will be licensed under the
-[Apache License 2.0](https://github.com/clearpathrobotics/clearpath_community_demos/blob/main/LICENSE)
+[Apache License 2.0](https://github.com/clearpathrobotics/clearpath_community_demos/blob/main/LICENSES/Apache2)
 that covers this repository.
 
 ## Disclaimer

@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: reachback_description
+    relative_path: urdf/reachback.urdf.xacro
+  srdf:
+    relative_path: config/reachback.srdf
+  package_settings:
+    author_name: Robotics Center of Excellence
+    author_email: stephanie.eng@rockwellautomation.com
+    generated_timestamp: 1758054587
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

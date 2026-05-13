@@ -11,8 +11,9 @@ for write-ups of each demo and instructions on how to run them.
 
 ```
 demos/
-├── hello_clearpath/      # minimal example demo
-└── <your_demo_here>/     # add your contribution
+├── hello_clearpath/                     # minimal example demo
+├── unified_manipulation_config_ws/      # whole-body mobile manipulation example
+└── <your_demo_here>/                    # add your contribution
 ```
 
 To contribute a new demo, see the

@@ -1,0 +1,16 @@
+task_base:
+  group_name:
+    type: string
+    default_value: "arm_base"
+    description: "Planning group name for the arm and base"
+  num_retries:
+    type: int
+    default_value: 10
+    description: "Number of times to attempt planning"
+    validation:
+      gt_eq<>: 0
+  mode:
+    type: string
+    description: "Task mode to execute: write_letters or draw_square"
+    validation:
+      one_of<>: [["write_letters", "draw_square"]]

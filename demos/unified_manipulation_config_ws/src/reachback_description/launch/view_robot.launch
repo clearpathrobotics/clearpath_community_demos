@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="X5" default="False" />
+  <arg name="X7" default="False" />
+
+  <!-- Publish the robot description -->
+  <node name="robot_state_publisher"
+        pkg="robot_state_publisher"
+        exec="robot_state_publisher"
+        output="screen">
+    <param name="robot_description"
+           type="str"
+           value="$(command '$(find-pkg-prefix xacro)/bin/xacro $(find-pkg-share reachback_description)/urdf/reachback.urdf.xacro X5:=$(var X5) X7:=$(var X7)')" />
+  </node>
+
+  <node name="joint_state_publisher"
+        pkg="joint_state_publisher_gui"
+        exec="joint_state_publisher_gui"
+        output="screen"
+  />
+
+  <node name="rviz2"
+        pkg="rviz2"
+        exec="rviz2"
+        output="screen"
+        args="-d $(find-pkg-share reachback_description)/config/config.rviz"
+  />
+
+</launch>

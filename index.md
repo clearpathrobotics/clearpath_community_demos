@@ -23,7 +23,7 @@ can clone, build, and run on your robot or in simulation.
 > The code in this repository can drive real robots. It has **not** been
 > reviewed, tested, or certified by Clearpath Robotics, by Rockwell
 > Automation, and comes with **no warranty of any kind** (see the
-> [LICENSE](https://github.com/clearpathrobotics/clearpath_community_demos/blob/main/LICENSE)).
+> [LICENSE](https://github.com/clearpathrobotics/clearpath_community_demos/blob/main/LICENSES/Apache2)).
 > You are solely responsible for any consequences of running it — including
 > damage to property, injury to people, or harm to your robot. Always:
 >

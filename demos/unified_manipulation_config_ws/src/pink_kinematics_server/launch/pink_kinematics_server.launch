@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Launch arguments -->
+  <let name="robot_description" value="$(command 'xacro
+    $(find-pkg-share reachback_description)/urdf/reachback.urdf.xacro')" />
+  <!-- Pink IK server node -->
+  <node pkg="pink_kinematics_server"
+        exec="pink_kinematics_server"
+        name="pink_kinematics_server"
+        output="screen">
+    <param name="robot_description" value="$(var robot_description)" type="str" />
+    <param from="$(find-pkg-share pink_kinematics_server)/config/pink_kinematics_plugin_params.yaml" />
+  </node>
+
+</launch>

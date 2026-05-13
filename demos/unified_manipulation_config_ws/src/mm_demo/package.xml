@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>mm_demo</name>
+  <version>0.0.0</version>
+  <description>Mobile Manipulation Demos</description>
+  <maintainer email="stephanie.eng@rockwellautomation.com">Robotics Center of Excellence</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>generate_parameter_library</depend>
+  <depend>rclcpp</depend>
+  <depend>moveit_msgs</depend>
+  <depend>moveit_ros_move_group</depend>
+  <depend>moveit_ros_planning_interface</depend>
+  <depend>moveit_task_constructor_core</depend>
+  <depend>moveit_visual_tools</depend>
+  <depend>rviz_visual_tools</depend>
+  <exec_depend>moveit_task_constructor_capabilities</exec_depend>
+  <exec_depend>moveit_task_constructor_visualization</exec_depend>
+  <exec_depend>reachback_description</exec_depend>
+  <exec_depend>reachback_moveit_config</exec_depend>
+  <exec_depend>pink_kinematics_server</exec_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

@@ -1,0 +1,64 @@
+/**:
+  ros__parameters:
+    letters: # Letters to write, in order
+      - R
+      - O
+      - K
+    motion_names: # Names of motions for each stage
+      - move_down
+      - move_down_half
+      - move_up
+      - move_up_half
+      - move_right_half
+      - move_left_half
+      - move_right_down_half
+      - move_left_down_half
+      - move_right_up_half
+    letter_motions: # Ordered list of motions that make up each letter
+      R:
+        value:
+          - move_down
+          - move_up
+          - move_right_half
+          - move_down_half
+          - move_left_half
+          - move_right_down_half
+      O:
+        value:
+          - move_down
+          - move_right_half
+          - move_up
+          - move_left_half
+      K:
+        value:
+          - move_down
+          - move_up_half
+          - move_right_up_half
+          - move_left_down_half
+          - move_right_down_half
+    start_points: # World frame position to start each letter at
+      R:
+        value: [1.0, -2.0, 2.0]
+      O:
+        value: [1.0, -1.0, 2.0]
+      K:
+        value: [1.0, 0.0, 2.0]
+    motions: # Relative motions for each stage
+      move_down:
+        value: [0.0, 0.0, -1.0]
+      move_up:
+        value: [0.0, 0.0, 1.0]
+      move_right_half:
+        value: [0.0, 0.5, 0.0]
+      move_down_half:
+        value: [0.0, 0.0, -0.5]
+      move_left_half:
+        value: [0.0, -0.5, 0.0]
+      move_right_up_half:
+        value: [0.0, 0.5, 0.5]
+      move_right_down_half:
+        value: [0.0, 0.5, -0.5]
+      move_left_down_half:
+        value: [0.0, -0.5, -0.5]
+      move_up_half:
+        value: [0.0, 0.0, 0.5]

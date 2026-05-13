@@ -1,0 +1,157 @@
+<?xml version="1.0"?>
+<robot name="reachback" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="reachback_arm" params="arm_prefix:=arm_">
+
+  <xacro:include filename="$(find dsr_description2)/xacro/macro.h2017.blue.xacro" />
+  <xacro:h2017 namespace="${arm_prefix}" prefix="${arm_prefix}"/>
+
+  <link name="${arm_prefix}tool0"/>
+  <joint name="${arm_prefix}joint_6-${arm_prefix}tool0" type="fixed">
+    <origin rpy="3.1415926535 -1.570796327 0" xyz="0 0 0"/>
+    <parent link="${arm_prefix}link_6"/>
+    <child link="${arm_prefix}tool0"/>
+  </joint>
+
+  <link name="${arm_prefix}eoat_adapter">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/eoat-adapter.stl"
+          scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/eoat-adapter.stl"
+          scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="${arm_prefix}tool0-${arm_prefix}eoat_adapter" type="fixed">
+    <origin rpy="-0.78 0 1.57" xyz="0.03 0.0 0.03" />
+    <parent link="${arm_prefix}tool0" />
+    <child link="${arm_prefix}eoat_adapter" />
+  </joint>
+
+  <link name="${arm_prefix}gripper">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/gripper-collision.stl"
+          scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/gripper-visual.stl"
+          scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.5 0.5 0.5 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="${arm_prefix}eoat_adapter-${arm_prefix}gripper" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0" />
+    <parent link="${arm_prefix}eoat_adapter" />
+    <child link="${arm_prefix}gripper" />
+  </joint>
+
+  <link name="${arm_prefix}finger_b">
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/finger-b.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/finger-b.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+  <link name="${arm_prefix}finger_a">
+    <visual>
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/finger-a.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="white">
+        <color rgba="1 1 1 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/finger-a.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="${arm_prefix}finger_b_joint" type="prismatic">
+    <parent link="${arm_prefix}gripper" />
+    <child link="${arm_prefix}finger_b" />
+    <origin rpy="0 0 0" xyz="0 0 0" />
+    <axis xyz="0 0 1" />
+    <limit effort="20" lower="-0.005" upper="0.055" velocity="0.225" />
+  </joint>
+  <joint name="${arm_prefix}finger_a_joint" type="prismatic">
+    <parent link="${arm_prefix}gripper" />
+    <child link="${arm_prefix}finger_a" />
+    <origin rpy="0 0 0" xyz="0 0 0" />
+    <axis xyz="0 0 -1" />
+    <limit effort="20" lower="-0.005" upper="0.055" velocity="0.225" />
+    <mimic joint="${arm_prefix}finger_b_joint" />
+  </joint>
+
+  <link name="${arm_prefix}fork_tcp"/>
+  <joint name="${arm_prefix}fork-${arm_prefix}fork_tcp" type="fixed">
+    <origin rpy="0 0 0" xyz="0 -0.1613 -0.21765" />
+    <parent link="${arm_prefix}finger_a" />
+    <child link="${arm_prefix}fork_tcp" />
+  </joint>
+
+  <link name="${arm_prefix}d405">
+    <collision>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/d405.stl"
+          scale="0.001 0.001 0.001" />
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/d405.stl"
+          scale="0.001 0.001 0.001" />
+      </geometry>
+      <material name="grey">
+        <color rgba="0.2 0.2 0.2 1.0"/>
+      </material>
+    </visual>
+  </link>
+  <joint name="${arm_prefix}eoat_adapter-${arm_prefix}d405" type="fixed">
+    <origin rpy="-2.838 -0.666 -0.895" xyz="0.05 0.04 -0.06" />
+    <parent link="${arm_prefix}eoat_adapter" />
+    <child link="${arm_prefix}d405" />
+  </joint>
+
+  <link name="${arm_prefix}gripper_tcp" />
+  <joint name="${arm_prefix}gripper-${arm_prefix}gripper_tcp" type="fixed">
+    <origin rpy="0 0 0" xyz="0 -0.156 0.0" />
+    <parent link="${arm_prefix}gripper" />
+    <child link="${arm_prefix}gripper_tcp" />
+  </joint>
+
+  </xacro:macro>
+
+</robot>

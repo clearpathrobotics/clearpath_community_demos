@@ -25,3 +25,9 @@ __pycache__/
 .idea/
 *.swp
 .DS_Store
+
+# Vendored dependencies
+src/vendor
+
+# History files
+histfile

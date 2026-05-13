@@ -1,0 +1,7 @@
+<library path="joint_to_twist_controller">
+  <class name="joint_to_twist_controller/JointToTwistController" type="joint_to_twist_controller::JointToTwistController" base_class_type="controller_interface::ChainableControllerInterface">
+    <description>
+      The joint to twist controller converts joint trajectories into robot frame to create twist commands.
+    </description>
+  </class>
+</library>

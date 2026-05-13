@@ -1,0 +1,7 @@
+build
+install
+log
+ccache
+.env
+docker/histfile
+__pycache__

@@ -1,0 +1,44 @@
+pink_kinematics_server:
+  robot_description:
+    type: string
+    description: "URDF robot description XML string"
+  base_joint_name:
+    type: string
+    default_value: "base_joint"
+    description: "Name of the root planar joint in the robot model"
+  service_name:
+    type: string
+    default_value: "solve_ik"
+    description: "Name of the IK service to advertise. If planning_group is non-empty, the group name is appended as a suffix (e.g. solve_ik/arm)."
+  planning_group:
+    type: string
+    default_value: ""
+    description: "Planning group this solver handles. When set, it is appended to service_name to make the service name unique across multiple IK solver nodes."
+  odom_frame:
+    type: string
+    default_value: "odom"
+    description: "Name of the odometry/world frame used as the root reference frame"
+  ik_time_step:
+    type: double
+    default_value: 0.01
+    description: "Integration time step (seconds) used per IK iteration"
+    validation:
+      gt<>: [0.0]
+  ik_min_iterations:
+    type: int
+    default_value: 200
+    description: "Minimum number of IK solver iterations"
+    validation:
+      gt<>: [0]
+  ik_convergence_tolerance:
+    type: double
+    default_value: 1.0e-4
+    description: "Velocity norm threshold below which IK is considered converged"
+    validation:
+      gt<>: [0.0]
+  ik_base_cost:
+    type: double
+    default_value: 1.0e-4
+    description: "Position and orientation cost for the base FrameTask that softly anchors the base to its seed pose. Only affects base redundancy since the tip FrameTask (weight 1.0) dominates arm joints."
+    validation:
+      gt_eq<>: [0.0]

@@ -1,0 +1,6 @@
+/**:
+  ros__parameters:
+    service_name: pink_solve_ik
+    ik_base_cost: 1e-6
+    ik_min_iterations: 2000
+    ik_convergence_tolerance: 1e-2

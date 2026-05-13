@@ -1,0 +1,23 @@
+draw_square:
+  group_name:
+    type: string
+    default_value: "arm_base"
+    description: "Planning group name for the arm and base"
+  fraction:
+    type: double
+    default_value: 0.8
+    description: "Minimum Cartesian path fraction that must be achieved"
+    validation:
+      bounds<>: [0.0, 1.0]
+  size:
+    type: double
+    default_value: 2.0
+    description: "Side length of the square to draw (meters)"
+    validation:
+      gt<>: 0.0
+  z_diff:
+    type: double
+    default_value: 1.0
+    description: "Z height difference between opposite corners of the square"
+    validation:
+      gt<>: 0.0

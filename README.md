@@ -20,7 +20,7 @@ This repository hosts both:
 > The code in this repository can drive real robots. It has **not** been
 > reviewed, tested, or certified by Clearpath Robotics, by Rockwell
 > Automation, and comes with **no warranty of any kind** (see the
-> [LICENSE](LICENSE)). You are solely responsible for any consequences of
+> [LICENSE](LICENSES/Apache2)). You are solely responsible for any consequences of
 > running it — including damage to property, injury to people, or harm to
 > your robot. Always:
 >
@@ -90,4 +90,4 @@ demo or improving an existing one.
 
 ## License
 
-[Apache License 2.0](LICENSE).
+[Apache License 2.0](LICENSES/Apache2).

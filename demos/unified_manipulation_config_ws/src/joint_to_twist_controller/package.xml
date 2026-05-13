@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>joint_to_twist_controller</name>
+  <version>0.0.0</version>
+  <description>A ros2_control controller that forwards joint trajectories to the
+    mecanum_drive_controller</description>
+  <maintainer email="stephanie.eng@rockwellautomation.com">Robotics Center of
+    Excellence</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>geometry_msgs</depend>
+  <depend>controller_interface</depend>
+  <depend>control_msgs</depend>
+  <depend>hardware_interface</depend>
+  <depend>joint_trajectory_controller</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>rclcpp_action</depend>
+  <depend>trajectory_msgs</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

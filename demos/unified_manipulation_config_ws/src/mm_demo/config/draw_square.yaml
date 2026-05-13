@@ -1,0 +1,4 @@
+/**:
+  ros__parameters:
+    size: 5.0
+    z_diff: 1.5

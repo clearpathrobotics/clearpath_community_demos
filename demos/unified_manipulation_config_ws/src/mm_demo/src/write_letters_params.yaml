@@ -1,0 +1,51 @@
+write_letters:
+  fraction:
+    type: double
+    default_value: 0.8
+    description: "Minimum Cartesian path fraction that must be achieved"
+    validation:
+      bounds<>: [0.0, 1.0]
+  letters:
+    type: string_array
+    default_value: []
+    description: "Ordered list of letters to write"
+  motion_names:
+    type: string_array
+    default_value: []
+    description: "List of motion names that define the motions used to write the letters"
+    validation:
+      unique<>: null
+  letter_motions:
+    __map_letters: # Map with letters as keys
+      value:
+        type: string_array
+        read_only: true
+        description: "Motions for drawing the letter, in order"
+  start_points:
+    __map_letters: # Map with letters as keys
+      value:
+        type: double_array
+        read_only: true
+        description: "Starting point for the letter in the odom frame"
+        validation:
+          fixed_size<>: 3
+  motions:
+    __map_motion_names:
+      value:
+        type: double_array
+        read_only: true
+        description: "Relative position to move for this motion"
+        validation:
+          fixed_size<>: 3
+  sampling_planning_attempts:
+    type: int
+    default_value: 10
+    description: "Number of attempts for sampling-based planning"
+    validation:
+      gt<>: 0
+  sampling_planning_timeout:
+    type: double
+    default_value: 10.0
+    description: "Timeout in seconds for sampling-based planning"
+    validation:
+      gt<>: 0.0

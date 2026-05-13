@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="mode" description="Task to run, either 'write_letters' or 'draw_square'" />
+
+  <!-- Use robot description from moveit_config as it has ros2_control tags for the arms -->
+  <let name="xacro" value="$(find-pkg-prefix xacro)/bin/xacro" />
+  <let name="reachback_moveit_config" value="$(find-pkg-share reachback_moveit_config)" />
+  <let name="robot_description"
+    value="$(command '$(var xacro) $(var reachback_moveit_config)/config/reachback.urdf.xacro')" />
+  <let name="robot_description_semantic"
+    value="$(command 'xacro $(var reachback_moveit_config)/config/reachback.srdf')" />
+
+  <!-- Include MoveIt RViz launch with RViz config for visualization only -->
+  <include file="$(var reachback_moveit_config)/launch/moveit_rviz.launch">
+    <arg name="rviz_config" value="$(find-pkg-share mm_demo)/config/mtc_viz.rviz" />
+    <arg name="executeTaskSolutionCapability" value="True" />
+  </include>
+
+  <node pkg="mm_demo" exec="cartesian_demo" output="screen">
+    <param name="robot_description" value="$(var robot_description)" type="str" />
+    <param name="robot_description_semantic" value="$(var robot_description_semantic)" type="str" />
+    <param from="$(var reachback_moveit_config)/config/cartesian_limits.yaml" />
+    <param from="$(var reachback_moveit_config)/config/kinematics.yaml" />
+    <param from="$(var reachback_moveit_config)/config/ompl_planning.yaml" />
+    <param from="$(var reachback_moveit_config)/config/planning_pipelines.yaml" />
+    <param from="$(var reachback_moveit_config)/config/joint_limits.yaml" />
+    <param from="$(find-pkg-share mm_demo)/config/cartesian_demo.yaml" />
+    <param from="$(find-pkg-share mm_demo)/config/write_letters.yaml" />
+    <param from="$(find-pkg-share mm_demo)/config/draw_square.yaml" />
+    <param name="mode" value="$(var mode)" type="str" />
+  </node>
+
+</launch>

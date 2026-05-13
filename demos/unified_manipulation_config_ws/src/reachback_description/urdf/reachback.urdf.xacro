@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<robot name="reachback" xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:arg name="namespace" default="reachback"/>
+
+  <xacro:include filename="$(find clearpath_platform_description)/urdf/common.urdf.xacro" />
+  <xacro:include filename="$(find clearpath_platform_description)/urdf/r100/r100.urdf.xacro" />
+  <xacro:r100 control="omni_4wd" front_wheels="mecanum" rear_wheels="mecanum"/>
+
+  <!-- Laser 0 - Front LiDAR -->
+  <xacro:include filename="$(find clearpath_sensors_description)/urdf/hokuyo_ust.urdf.xacro"/>
+  <xacro:hokuyo_ust
+    name="laser_0"
+    parent_link="chassis_link">
+    <origin xyz="0.3922 0.0 0.1856" rpy="0.0 0.0 0.0"/>
+  </xacro:hokuyo_ust>
+
+  <!-- Laser 1 - Rear LiDAR -->
+  <xacro:hokuyo_ust
+    name="laser_1"
+    parent_link="chassis_link">
+    <origin xyz="-0.3922 0.0 0.1856" rpy="0.0 0.0 3.14159"/>
+  </xacro:hokuyo_ust>
+
+  <!-- Include Manipulator Arm -->
+  <xacro:property name="arm_prefix" value="arm_" />
+
+  <!-- Include and instantiate the arm + EOAT macro -->
+  <xacro:include filename="$(find reachback_description)/urdf/reachback_arm.urdf.xacro" />
+  <xacro:reachback_arm arm_prefix="${arm_prefix}" />
+
+  <!-- Top assembly of ridgeback -->
+  <link name="top_assembly_link">
+    <visual>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/ridgeback_top_assembly.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="blackish">
+        <color rgba="0.15 0.15 0.15 1.0"/>
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="package://reachback_description/meshes/ridgeback_top_assembly.stl" scale="0.001 0.001 0.001"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <joint name="default_mount-top_assembly_link" type="fixed">
+    <origin rpy="0 0 0" xyz="0 0 0" />
+    <parent link="default_mount" />
+    <child link="top_assembly_link" />
+  </joint>
+
+  <!-- Mount the arm to the mobile base -->
+  <joint name="top_assembly_link-${arm_prefix}base_link" type="fixed">
+    <origin rpy="0 0 0" xyz="0.2 -0.04 0.056" />
+    <parent link="top_assembly_link" />
+    <child link="${arm_prefix}base_link" />
+  </joint>
+
+</robot>
