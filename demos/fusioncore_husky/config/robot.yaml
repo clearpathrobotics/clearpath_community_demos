@@ -1,0 +1,41 @@
+# Clearpath robot.yaml for Husky A200 running FusionCore sensor fusion.
+#
+# Hardware:
+#   IMU: Microstrain 3DM-GX5-25 connected via USB (/dev/microstrain_main)
+#   GPS: u-blox F9P (launched separately via ublox_gps_node; not in Clearpath
+#        sensor registry, so launch_enabled is false here)
+#
+# Adjust serial_number, hostname, and sensor xyz/rpy to match your robot.
+#
+# Topics published by this config that FusionCore uses:
+#   /sensors/imu_0/data   -> remapped to /imu/data in fusioncore_husky.launch.py
+#   /husky_velocity_controller/odom -> remapped to /odom/wheels
+#   /fix                  -> GPS fix from ublox_gps_node (no remap needed)
+
+serial_number: a200-0000
+version: 0
+system:
+  hosts:
+    - hostname: cpr-a200-0000
+      ip: 192.168.131.1
+  ros2:
+    namespace: ""
+    domain_id: 0
+    middleware:
+      implementation: rmw_fastrtps_cpp
+platform:
+  controller: ps4
+  attachments: []
+sensors:
+  imu:
+    - model: microstrain_imu
+      urdf_enabled: true
+      launch_enabled: true
+      parent: base_link
+      xyz: [0.0, 0.0, 0.0]
+      rpy: [0.0, 0.0, 0.0]
+      ros_parameters:
+        port: /dev/microstrain_main
+        frame_id: imu_link
+        use_enu_frame: true
+        imu_data_rate: 100
