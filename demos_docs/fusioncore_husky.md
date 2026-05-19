@@ -62,6 +62,7 @@ The launch file handles the Husky non-default topic names automatically:
 
 | FusionCore topic | Husky topic |
 |---|---|
+| `/imu/data` | `/sensors/imu_0/data` |
 | `/odom/wheels` | `/husky_velocity_controller/odom` |
 | `/gnss/fix` | `/fix` |
 

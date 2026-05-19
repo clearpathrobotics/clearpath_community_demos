@@ -7,21 +7,9 @@
 # GPS:       u-blox F9P (standard GPS defaults; see RTK block below)
 # Tested:    datasheet-tuned, not yet field-validated: contributions welcome
 #
-# Launch with topic remaps (Husky publishes odom and GPS at non-default topics):
+# Launch using the demo package (handles all topic remaps automatically):
 #
-#   ros2 launch fusioncore_ros fusioncore.launch.py \
-#     fusioncore_config:=$(ros2 pkg prefix fusioncore_ros)/share/fusioncore_ros/config/clearpath_husky.yaml \
-#     --ros-args \
-#     -r /odom/wheels:=/husky_velocity_controller/odom \
-#     -r /gnss/fix:=/fix
-#
-# For Nav2:
-#   ros2 launch fusioncore_ros fusioncore_nav2.launch.py \
-#     fusioncore_config:=$(ros2 pkg prefix fusioncore_ros)/share/fusioncore_ros/config/clearpath_husky.yaml \
-#     nav2_params:=/path/to/nav2_params.yaml \
-#     --ros-args \
-#     -r /odom/wheels:=/husky_velocity_controller/odom \
-#     -r /gnss/fix:=/fix
+#   ros2 launch fusioncore_husky fusioncore_husky.launch.py
 
 fusioncore:
   ros__parameters:
@@ -37,7 +25,7 @@ fusioncore:
     imu.has_magnetometer: false
     imu.gyro_noise: 0.003           # rad/s : derived from ARW 0.07°/√hr spec
     imu.accel_noise: 0.05           # m/s²  : derived from VRW 0.02 m/s/√hr spec
-    imu.remove_gravitational_acceleration: false  # Microstrain driver publishes raw
+    imu.remove_gravitational_acceleration: false  # driver includes gravity in linear_acceleration; FusionCore accounts for it internally
     imu.frame_id: "imu_link"
 
     # ── Wheel encoders: Husky A200 ────────────────────────────────────────────
