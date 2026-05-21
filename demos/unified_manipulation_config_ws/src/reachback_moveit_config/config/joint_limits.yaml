@@ -76,9 +76,9 @@
           has_velocity_limits: true
           max_velocity: 0.02 # Divide by 2 to get per-finger velocity limits
           has_acceleration_limits: true
-          max_acceleration: 1.0 # This value is from moveit_resources as it is not specified in the datasheet
+          max_acceleration: 1.0
         arm_finger_b_joint:
           has_velocity_limits: true
           max_velocity: 0.02 # Divide by 2 to get per-finger velocity limits
           has_acceleration_limits: true
-          max_acceleration: 1.0 # This value is from moveit_resources as it is not specified in the datasheet
+          max_acceleration: 1.0

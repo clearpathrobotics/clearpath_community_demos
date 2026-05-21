@@ -97,7 +97,7 @@ You will only need to run this script once.
 ```
 
 > Please note that this project uses dependencies that are not provided by rosdep!
-> `rosdep install` will *not* be sufficient to install all depenendencies.
+> `rosdep install` will *not* be sufficient to install all dependencies.
 > If you would like to work outside of the Docker image, please see the [Dockerfile](./docker/Dockerfile) for a complete list of dependencies.
 
 ### Running the Docker Container

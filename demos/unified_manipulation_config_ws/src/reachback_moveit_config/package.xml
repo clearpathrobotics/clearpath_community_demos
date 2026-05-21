@@ -23,7 +23,6 @@
   <exec_depend>moveit_planners_ompl</exec_depend>
   <exec_depend>moveit_ros_move_group</exec_depend>
   <exec_depend>moveit_ros_visualization</exec_depend>
-  <exec_depend>tf_republisher</exec_depend>
   <exec_depend>robot_state_publisher</exec_depend>
   <exec_depend>stretch_description</exec_depend>
   <exec_depend>tf2_ros</exec_depend>

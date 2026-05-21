@@ -1,19 +1,21 @@
 #!/usr/bin/env python3
 import math
-import numpy as np
-import rclpy
-from rclpy.node import Node
-import pinocchio as pin
-from pink import Configuration
-from pink.tasks import FrameTask
-from pink.solve_ik import solve_ik
-
 import traceback
 
-from geometry_msgs.msg import Transform, Vector3, Quaternion
-from moveit_msgs.srv import GetPositionIK
+from geometry_msgs.msg import Quaternion, Transform, Vector3
 from moveit_msgs.msg import MoveItErrorCodes, RobotState
-from pink_kinematics_server.pink_kinematics_server_parameters import pink_kinematics_server as ServerParams
+from moveit_msgs.srv import GetPositionIK
+import numpy as np
+from pink import Configuration
+from pink.solve_ik import solve_ik
+from pink.tasks import FrameTask
+import pinocchio as pin
+import rclpy
+from rclpy.node import Node
+
+from pink_kinematics_server.pink_kinematics_server_parameters import (
+    pink_kinematics_server as ServerParams,
+)
 
 
 class PinkIKServer(Node):
@@ -42,12 +44,15 @@ class PinkIKServer(Node):
                 break
         if not self.base_frame_name:
             self.get_logger().warn(
-                f"Could not find a child frame of the base joint '{base_joint_name}', assuming base_link"
+                f"Could not find a child frame of the base joint '{base_joint_name}', assuming "
+                f"base_link"
             )
             self.base_frame_name = "base_link"
         self.get_logger().info(f"Using '{self.base_frame_name}' as base frame")
 
-        self.srv = self.create_service(GetPositionIK, service_name, self.solve_ik_callback)
+        self.srv = self.create_service(
+            GetPositionIK, service_name, self.solve_ik_callback
+        )
         self.get_logger().info(f"Pink IK service '{service_name}' ready")
 
     def solve_ik_callback(self, request, response):
@@ -61,86 +66,9 @@ class PinkIKServer(Node):
         timeout_secs = ik_req.timeout.sec + ik_req.timeout.nanosec * 1e-9
 
         try:
-            # Convert from ROS robot state message to Pinocchio configuration
-            q = self._robot_state_to_pinocchio_q(ik_req.robot_state)
-            configuration = Configuration(self.model, self.data, q)
-
-            # Create a frame task for the tip link
-            tasks = {
-                "tip": FrameTask(
-                    tip_link,
-                    position_cost=1.0,
-                    orientation_cost=1.0,
-                ),
-                "base": FrameTask(
-                    self.base_frame_name,
-                    position_cost=self.params.ik_base_cost,
-                    orientation_cost=self.params.ik_base_cost,
-                ),
-            }
-
-            # Convert target pose to Pinocchio SE3
-            target_in_base = pin.SE3(
-                pin.Quaternion(
-                    target_pose.orientation.w,
-                    target_pose.orientation.x,
-                    target_pose.orientation.y,
-                    target_pose.orientation.z,
-                ).toRotationMatrix(),
-                np.array(
-                    [
-                        target_pose.position.x,
-                        target_pose.position.y,
-                        target_pose.position.z,
-                    ]
-                ),
+            self._solve_ik_impl(
+                ik_req, tip_link, target_pose, ik_base_frame, timeout_secs, response
             )
-
-            # Transform target to world frame
-            pin.forwardKinematics(self.model, self.data, q)
-            pin.updateFramePlacements(self.model, self.data)
-
-            if ik_base_frame and self.model.existFrame(ik_base_frame):
-                frame_id = self.model.getFrameId(ik_base_frame)
-                transform_world_base = self.data.oMf[frame_id]
-                target = transform_world_base * target_in_base
-            elif ik_base_frame == self.params.odom_frame:  # No transform needed if target is already in odom frame
-                target = target_in_base
-            else:
-                # If we don't have a base frame, assume base frame is world frame
-                self.get_logger().warn(
-                    f"Base frame '{ik_base_frame}' not found in model, assuming target pose is in world frame"
-                )
-                target = target_in_base
-
-            tasks["tip"].set_target(target)
-
-            # Set the base task target to the current base pose to minimize unnecessary base motion during IK.
-            base_fid = self.model.getFrameId(self.base_frame_name)
-            tasks["base"].set_target(self.data.oMf[base_fid])
-
-            dt = self.params.ik_time_step
-            min_iters = self.params.ik_min_iterations
-            max_iters = max(min_iters, int(timeout_secs / dt))
-            velocity = np.zeros(self.model.nv)
-            converge_tol = self.params.ik_convergence_tolerance
-
-            # Solve IK by iteratively integrating velocity commands
-            for _ in range(max_iters):
-                velocity = solve_ik(configuration, tasks.values(), dt, solver="quadprog")
-                configuration.integrate_inplace(velocity, dt)
-                if np.linalg.norm(velocity) < converge_tol:
-                    break
-
-            converged = bool(np.linalg.norm(velocity) < converge_tol)
-            if converged:
-                response.error_code.val = MoveItErrorCodes.SUCCESS
-                # Convert Pinocchio configuration back to MoveIt robot state message
-                response.solution = self._pinocchio_q_to_robot_state(configuration.q)
-            else:
-                response.error_code.val = MoveItErrorCodes.NO_IK_SOLUTION
-                response.error_code.message = "Did not converge"
-                self.get_logger().warn("IK solve did not converge within the timeout")
         except Exception as e:
             response.error_code.val = MoveItErrorCodes.NO_IK_SOLUTION
             response.error_code.message = str(e)
@@ -152,10 +80,100 @@ class PinkIKServer(Node):
             )
         return response
 
-    def _pinocchio_q_to_robot_state(self, q):
-        """Convert a Pinocchio configuration vector to a robot state message used by MoveIt.
+    def _solve_ik_impl(
+        self, ik_req, tip_link, target_pose, ik_base_frame, timeout_secs, response
+    ):
+        # Convert from ROS robot state message to Pinocchio configuration
+        q = self._robot_state_to_pinocchio_q(ik_req.robot_state)
+        configuration = Configuration(self.model, self.data, q)
 
-        - Planar joints (nq=4): (x, y, sin, cos) converted to geometry_msgs/Transform in multi_dof_joint_state
+        # Create a frame task for the tip link
+        tasks = {
+            "tip": FrameTask(
+                tip_link,
+                position_cost=1.0,
+                orientation_cost=1.0,
+            ),
+            "base": FrameTask(
+                self.base_frame_name,
+                position_cost=self.params.ik_base_cost,
+                orientation_cost=self.params.ik_base_cost,
+            ),
+        }
+
+        # Convert target pose to Pinocchio SE3
+        target_in_base = pin.SE3(
+            pin.Quaternion(
+                target_pose.orientation.w,
+                target_pose.orientation.x,
+                target_pose.orientation.y,
+                target_pose.orientation.z,
+            ).toRotationMatrix(),
+            np.array(
+                [
+                    target_pose.position.x,
+                    target_pose.position.y,
+                    target_pose.position.z,
+                ]
+            ),
+        )
+
+        # Transform target to world frame
+        pin.forwardKinematics(self.model, self.data, q)
+        pin.updateFramePlacements(self.model, self.data)
+
+        if ik_base_frame and self.model.existFrame(ik_base_frame):
+            frame_id = self.model.getFrameId(ik_base_frame)
+            transform_world_base = self.data.oMf[frame_id]
+            target = transform_world_base * target_in_base
+        elif (
+            ik_base_frame == self.params.odom_frame
+        ):  # No transform needed if target is already in odom frame
+            target = target_in_base
+        else:
+            # If we don't have a base frame, assume base frame is world frame
+            self.get_logger().warn(
+                f"Base frame '{ik_base_frame}' not found in model, assuming target pose is in "
+                f"world frame"
+            )
+            target = target_in_base
+
+        tasks["tip"].set_target(target)
+
+        # Set the base task target to the current base pose to minimize unnecessary base motion
+        # during IK.
+        base_fid = self.model.getFrameId(self.base_frame_name)
+        tasks["base"].set_target(self.data.oMf[base_fid])
+
+        dt = self.params.ik_time_step
+        min_iters = self.params.ik_min_iterations
+        max_iters = max(min_iters, int(timeout_secs / dt))
+        velocity = np.zeros(self.model.nv)
+        converge_tol = self.params.ik_convergence_tolerance
+
+        # Solve IK by iteratively integrating velocity commands
+        for _ in range(max_iters):
+            velocity = solve_ik(configuration, tasks.values(), dt, solver="quadprog")
+            configuration.integrate_inplace(velocity, dt)
+            if np.linalg.norm(velocity) < converge_tol:
+                break
+
+        converged = bool(np.linalg.norm(velocity) < converge_tol)
+        if converged:
+            response.error_code.val = MoveItErrorCodes.SUCCESS
+            # Convert Pinocchio configuration back to MoveIt robot state message
+            response.solution = self._pinocchio_q_to_robot_state(configuration.q)
+        else:
+            response.error_code.val = MoveItErrorCodes.NO_IK_SOLUTION
+            response.error_code.message = "Did not converge"
+            self.get_logger().warn("IK solve did not converge within the timeout")
+
+    def _pinocchio_q_to_robot_state(self, q):
+        """
+        Convert a Pinocchio configuration vector to a robot state message used by MoveIt.
+
+        - Planar joints (nq=4): (x, y, sin, cos) converted to geometry_msgs/Transform in
+          multi_dof_joint_state
         - Continuous revolute joints (nq=2): (cos, sin) converted back to raw angle in joint_state
         - Bounded revolute / prismatic joints (nq=1): copied directly in joint_state
         - Fixed joints (nq=0): ignored
@@ -197,7 +215,8 @@ class PinkIKServer(Node):
                 continue
             else:
                 self.get_logger().error(
-                    f"Failed to convert joint {name} from configuration vector to RobotState message: unsupported nq={nq}, skipping"
+                    f"Failed to convert joint {name} from configuration vector to RobotState "
+                    f"message: unsupported nq={nq}, skipping"
                 )
 
         robot_state_msg = RobotState()
@@ -210,9 +229,11 @@ class PinkIKServer(Node):
         return robot_state_msg
 
     def _robot_state_to_pinocchio_q(self, robot_state):
-        """Convert MoveIt robot state message into a Pinocchio configuration.
+        """
+        Convert MoveIt robot state message into a Pinocchio configuration.
 
-        - Multi-dof joints (transform) are converted to (x, y, cos(theta), sin(theta)) for Pinocchio.
+        - Multi-dof joints (transform) are converted to (x, y, cos(theta), sin(theta)) for
+          Pinocchio.
         - MoveIt continuous revolute joints(theta), are converted to (cos, sin) for Pinocchio.
         - Bounded revolute/prismatic joints are copied directly
         - Fixed joints are ignored
@@ -222,7 +243,7 @@ class PinkIKServer(Node):
         mdof_joint_names = robot_state.multi_dof_joint_state.joint_names
         mdof_transforms = robot_state.multi_dof_joint_state.transforms
 
-        for name, transform in zip(mdof_joint_names, mdof_transforms):
+        for name, transform in zip(mdof_joint_names, mdof_transforms, strict=True):
             # Convert transform to (x, y, cos(theta), sin(theta)) for Pinocchio planar joint
             # Note that this only works for planar joints for now
             t = transform.translation
@@ -241,15 +262,18 @@ class PinkIKServer(Node):
                 q[idx + 3] = np.sin(theta)
             else:
                 self.get_logger().warn(
-                    f"Robot state message contains multi-DOF joint '{joint_name}' that is not found in the Pinocchio model, skipping"
+                    f"Robot state message contains multi-DOF joint '{joint_name}' that is not "
+                    f"found in the Pinocchio model, skipping"
                 )
 
         joint_names = robot_state.joint_state.name
         joint_values = robot_state.joint_state.position
-        for name, value in zip(joint_names, joint_values):
+
+        for name, value in zip(joint_names, joint_values, strict=True):
             if not self.model.existJointName(name):
                 self.get_logger().warn(
-                    f"Robot state message contains joint '{name}' that is not found in the Pinocchio model, skipping"
+                    f"Robot state message contains joint '{name}' that is not found in "
+                    f"the Pinocchio model, skipping"
                 )
                 continue
             jid = self.model.getJointId(name)
@@ -268,7 +292,8 @@ class PinkIKServer(Node):
                 continue
             else:
                 self.get_logger().error(
-                    f"Failed to convert joint {name} from RobotState message to configuration vector: unsupported nq={nq}, skipping."
+                    f"Failed to convert joint {name} from RobotState message to configuration "
+                    f"vector: unsupported nq={nq}, skipping."
                 )
         return q
 
