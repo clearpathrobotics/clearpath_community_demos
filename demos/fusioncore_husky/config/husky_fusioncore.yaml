@@ -9,7 +9,7 @@
 #
 # Launch using the demo package (handles all topic remaps automatically):
 #
-#   ros2 launch fusioncore_husky fusioncore_husky.launch.py
+#   ros2 launch fusioncore_husky fusioncore_husky.launch.py setup_path:=/etc/clearpath/
 
 fusioncore:
   ros__parameters:
