@@ -46,8 +46,8 @@ JointToTwistController::on_export_reference_interfaces()
   for (size_t i = 0; i < reference_interface_names.size(); ++i)
   {
     reference_interfaces.push_back(hardware_interface::CommandInterface(
-      get_node()->get_name() + reference_interface_names.at(i), hardware_interface::HW_IF_VELOCITY,
-      &reference_interfaces_.at(i)));
+      get_node()->get_name() + reference_interface_names.at(i),
+      hardware_interface::HW_IF_VELOCITY, &reference_interfaces_.at(i)));
   }
   return reference_interfaces;
 }

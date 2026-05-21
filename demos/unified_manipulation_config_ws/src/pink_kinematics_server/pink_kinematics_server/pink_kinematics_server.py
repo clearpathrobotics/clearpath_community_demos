@@ -20,7 +20,7 @@ from pink_kinematics_server.pink_kinematics_server_parameters import (
 
 class PinkIKServer(Node):
     def __init__(self):
-        super().__init__("pink_ik_server")
+        super().__init__('pink_ik_server')
         param_listener = ServerParams.ParamListener(self)
         self.params = param_listener.get_params()
         robot_description = self.params.robot_description
@@ -45,14 +45,12 @@ class PinkIKServer(Node):
         if not self.base_frame_name:
             self.get_logger().warn(
                 f"Could not find a child frame of the base joint '{base_joint_name}', assuming "
-                f"base_link"
+                f'base_link'
             )
-            self.base_frame_name = "base_link"
+            self.base_frame_name = 'base_link'
         self.get_logger().info(f"Using '{self.base_frame_name}' as base frame")
 
-        self.srv = self.create_service(
-            GetPositionIK, service_name, self.solve_ik_callback
-        )
+        self.srv = self.create_service(GetPositionIK, service_name, self.solve_ik_callback)
         self.get_logger().info(f"Pink IK service '{service_name}' ready")
 
     def solve_ik_callback(self, request, response):
@@ -73,28 +71,26 @@ class PinkIKServer(Node):
             response.error_code.val = MoveItErrorCodes.NO_IK_SOLUTION
             response.error_code.message = str(e)
             self.get_logger().error(
-                f"IK solve failed:\n"
-                f"  joint_names ({len(joint_names)}): {joint_names}\n"
-                f"  tip_link: {tip_link}\n"
-                f"{traceback.format_exc()}"
+                f'IK solve failed:\n'
+                f'  joint_names ({len(joint_names)}): {joint_names}\n'
+                f'  tip_link: {tip_link}\n'
+                f'{traceback.format_exc()}'
             )
         return response
 
-    def _solve_ik_impl(
-        self, ik_req, tip_link, target_pose, ik_base_frame, timeout_secs, response
-    ):
+    def _solve_ik_impl(self, ik_req, tip_link, target_pose, ik_base_frame, timeout_secs, response):
         # Convert from ROS robot state message to Pinocchio configuration
         q = self._robot_state_to_pinocchio_q(ik_req.robot_state)
         configuration = Configuration(self.model, self.data, q)
 
         # Create a frame task for the tip link
         tasks = {
-            "tip": FrameTask(
+            'tip': FrameTask(
                 tip_link,
                 position_cost=1.0,
                 orientation_cost=1.0,
             ),
-            "base": FrameTask(
+            'base': FrameTask(
                 self.base_frame_name,
                 position_cost=self.params.ik_base_cost,
                 orientation_cost=self.params.ik_base_cost,
@@ -109,13 +105,11 @@ class PinkIKServer(Node):
                 target_pose.orientation.y,
                 target_pose.orientation.z,
             ).toRotationMatrix(),
-            np.array(
-                [
-                    target_pose.position.x,
-                    target_pose.position.y,
-                    target_pose.position.z,
-                ]
-            ),
+            np.array([
+                target_pose.position.x,
+                target_pose.position.y,
+                target_pose.position.z,
+            ]),
         )
 
         # Transform target to world frame
@@ -134,16 +128,16 @@ class PinkIKServer(Node):
             # If we don't have a base frame, assume base frame is world frame
             self.get_logger().warn(
                 f"Base frame '{ik_base_frame}' not found in model, assuming target pose is in "
-                f"world frame"
+                f'world frame'
             )
             target = target_in_base
 
-        tasks["tip"].set_target(target)
+        tasks['tip'].set_target(target)
 
         # Set the base task target to the current base pose to minimize unnecessary base motion
         # during IK.
         base_fid = self.model.getFrameId(self.base_frame_name)
-        tasks["base"].set_target(self.data.oMf[base_fid])
+        tasks['base'].set_target(self.data.oMf[base_fid])
 
         dt = self.params.ik_time_step
         min_iters = self.params.ik_min_iterations
@@ -153,7 +147,7 @@ class PinkIKServer(Node):
 
         # Solve IK by iteratively integrating velocity commands
         for _ in range(max_iters):
-            velocity = solve_ik(configuration, tasks.values(), dt, solver="quadprog")
+            velocity = solve_ik(configuration, tasks.values(), dt, solver='quadprog')
             configuration.integrate_inplace(velocity, dt)
             if np.linalg.norm(velocity) < converge_tol:
                 break
@@ -165,8 +159,8 @@ class PinkIKServer(Node):
             response.solution = self._pinocchio_q_to_robot_state(configuration.q)
         else:
             response.error_code.val = MoveItErrorCodes.NO_IK_SOLUTION
-            response.error_code.message = "Did not converge"
-            self.get_logger().warn("IK solve did not converge within the timeout")
+            response.error_code.message = 'Did not converge'
+            self.get_logger().warn('IK solve did not converge within the timeout')
 
     def _pinocchio_q_to_robot_state(self, q):
         """
@@ -215,8 +209,8 @@ class PinkIKServer(Node):
                 continue
             else:
                 self.get_logger().error(
-                    f"Failed to convert joint {name} from configuration vector to RobotState "
-                    f"message: unsupported nq={nq}, skipping"
+                    f'Failed to convert joint {name} from configuration vector to RobotState '
+                    f'message: unsupported nq={nq}, skipping'
                 )
 
         robot_state_msg = RobotState()
@@ -263,7 +257,7 @@ class PinkIKServer(Node):
             else:
                 self.get_logger().warn(
                     f"Robot state message contains multi-DOF joint '{joint_name}' that is not "
-                    f"found in the Pinocchio model, skipping"
+                    f'found in the Pinocchio model, skipping'
                 )
 
         joint_names = robot_state.joint_state.name
@@ -273,7 +267,7 @@ class PinkIKServer(Node):
             if not self.model.existJointName(name):
                 self.get_logger().warn(
                     f"Robot state message contains joint '{name}' that is not found in "
-                    f"the Pinocchio model, skipping"
+                    f'the Pinocchio model, skipping'
                 )
                 continue
             jid = self.model.getJointId(name)
@@ -292,8 +286,8 @@ class PinkIKServer(Node):
                 continue
             else:
                 self.get_logger().error(
-                    f"Failed to convert joint {name} from RobotState message to configuration "
-                    f"vector: unsupported nq={nq}, skipping."
+                    f'Failed to convert joint {name} from RobotState message to configuration '
+                    f'vector: unsupported nq={nq}, skipping.'
                 )
         return q
 
@@ -310,5 +304,5 @@ def main(args=None):
         rclpy.shutdown()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
