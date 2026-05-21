@@ -19,7 +19,6 @@ a ROS 2 UKF. Outputs a continuous global-frame `odom -> base_link` TF and
 
 ```bash
 sudo apt install ros-jazzy-fusioncore-ros
-# or: ros-humble-fusioncore-ros
 ```
 
 ## Install
@@ -36,7 +35,7 @@ source install/setup.bash
 ## Run
 
 ```bash
-ros2 launch fusioncore_husky fusioncore_husky.launch.py
+ros2 launch fusioncore_husky fusioncore_husky.launch.py setup_path:=/etc/clearpath/
 ```
 
 FusionCore will initialize on the first IMU message and start publishing
@@ -60,11 +59,14 @@ datasheets. Key parameters to adjust for your hardware:
 
 The launch file handles the Husky non-default topic names automatically:
 
-| FusionCore topic | Husky topic |
+| FusionCore topic | Clearpath platform topic |
 |---|---|
-| `/imu/data` | `/sensors/imu_0/data` |
-| `/odom/wheels` | `/husky_velocity_controller/odom` |
+| `/imu/data` | `/<namespace>/sensors/imu_0/data` |
+| `/odom/wheels` | `/<namespace>/platform/odom` |
 | `/gnss/fix` | `/fix` |
+
+The namespace (e.g. `a200_0000`) is read from `robot.yaml` at the `setup_path`.
+Pass `setup_path:=<path>` if your robot.yaml is not at `/etc/clearpath/`.
 
 ## Full documentation
 

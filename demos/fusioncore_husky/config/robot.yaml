@@ -7,10 +7,10 @@
 #
 # Adjust serial_number, hostname, and sensor xyz/rpy to match your robot.
 #
-# Topics published by this config that FusionCore uses:
-#   /sensors/imu_0/data   -> remapped to /imu/data in fusioncore_husky.launch.py
-#   /husky_velocity_controller/odom -> remapped to /odom/wheels
-#   /fix                  -> GPS fix from ublox_gps_node (no remap needed)
+# Topics FusionCore subscribes to (namespace prefix from serial_number above):
+#   /<namespace>/sensors/imu_0/data  -> remapped to /imu/data
+#   /<namespace>/platform/odom       -> remapped to /odom/wheels
+#   /fix                             -> GPS fix from ublox_gps_node (no remap)
 
 serial_number: a200-0000
 version: 0
