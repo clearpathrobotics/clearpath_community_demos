@@ -7,7 +7,7 @@ sort: 2
 Fuses the Husky A200 wheel odometry, Microstrain 3DM-GX5-25 IMU, and
 u-blox F9P GPS using [FusionCore](https://github.com/manankharwar/fusioncore),
 a ROS 2 UKF. Outputs a continuous global-frame `odom -> base_link` TF and
-`/fusion/odom` at 100 Hz, ready for Nav2.
+`fusion/odom` at 100 Hz, ready for Nav2.
 
 **Source:** [`demos/fusioncore_husky/`](https://github.com/clearpathrobotics/clearpath_community_demos/tree/main/demos/fusioncore_husky)
 
@@ -39,7 +39,7 @@ ros2 launch fusioncore_husky fusioncore_husky.launch.py setup_path:=/etc/clearpa
 ```
 
 FusionCore will initialize on the first IMU message and start publishing
-`/fusion/odom` and the `odom -> base_link` TF. Point Nav2 at `/fusion/odom`.
+`fusion/odom` and the `odom -> base_link` TF. Point Nav2 at `fusion/odom`.
 
 ## Configuration
 
@@ -61,11 +61,11 @@ The launch file handles the Husky non-default topic names automatically:
 
 | FusionCore topic | Clearpath platform topic |
 |---|---|
-| `/imu/data` | `/<namespace>/sensors/imu_0/data` |
-| `/odom/wheels` | `/<namespace>/platform/odom` |
-| `/gnss/fix` | `/fix` |
+| `imu/data` | `sensors/imu_0/data` |
+| `odom/wheels` | `platform/odom` |
+| `gnss/fix` | `/fix` |
 
-The namespace (e.g. `a200_0000`) is read from `robot.yaml` at the `setup_path`.
+Topics are resolved under the robot namespace (e.g. `a200_0000`) read from `robot.yaml`.
 Pass `setup_path:=<path>` if your robot.yaml is not at `/etc/clearpath/`.
 
 ## Full documentation
