@@ -39,6 +39,7 @@ def launch_setup(context, *args, **kwargs):
         package='fusioncore_ros',
         executable='fusioncore_node',
         name='fusioncore',
+        namespace=namespace,
         output='screen',
         parameters=[config, {'use_sim_time': use_sim_time}],
         remappings=[
