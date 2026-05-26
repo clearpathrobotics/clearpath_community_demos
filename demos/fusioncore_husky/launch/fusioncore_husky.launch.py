@@ -1,11 +1,11 @@
 from pathlib import Path
 
 from clearpath_config.clearpath_config import ClearpathConfig
-from launch_ros.actions import LifecycleNode, Node, PushRosNamespace
+from launch_ros.actions import LifecycleNode, Node
 from launch_ros.substitutions import FindPackageShare
 
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
+from launch.actions import DeclareLaunchArgument, OpaqueFunction
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 
 ARGUMENTS = [
@@ -28,6 +28,7 @@ def launch_setup(context, *args, **kwargs):
 
     cc = ClearpathConfig(str(Path(setup_path.perform(context)) / 'robot.yaml'))
     namespace = cc.system.namespace
+    ns = f'/{namespace}'
 
     config = PathJoinSubstitution([
         FindPackageShare('fusioncore_husky'),
@@ -43,9 +44,9 @@ def launch_setup(context, *args, **kwargs):
         output='screen',
         parameters=[config, {'use_sim_time': use_sim_time}],
         remappings=[
-            ('imu/data', 'sensors/imu_0/data'),
-            ('odom/wheels', 'platform/odom'),
-            ('gnss/fix', 'sensors/gps_0/fix'),
+            ('/imu/data', f'{ns}/sensors/imu_0/data'),
+            ('/odom/wheels', f'{ns}/platform/odom'),
+            ('/gnss/fix', f'{ns}/sensors/gps_0/fix'),
         ],
     )
 
@@ -53,6 +54,7 @@ def launch_setup(context, *args, **kwargs):
         package='nav2_lifecycle_manager',
         executable='lifecycle_manager',
         name='lifecycle_manager_fusioncore',
+        namespace=namespace,
         output='screen',
         parameters=[
             {
@@ -63,13 +65,7 @@ def launch_setup(context, *args, **kwargs):
         ],
     )
 
-    return [
-        GroupAction([
-            PushRosNamespace(namespace),
-            fc,
-            lm,
-        ]),
-    ]
+    return [fc, lm]
 
 
 def generate_launch_description() -> LaunchDescription:

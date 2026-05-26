@@ -40,7 +40,7 @@ sensors:
         use_enu_frame: true
         imu_data_rate: 100
   gps:
-    - model: nmea_gps
+    - model: garmin_18x
       urdf_enabled: true
       launch_enabled: true
       parent: base_link

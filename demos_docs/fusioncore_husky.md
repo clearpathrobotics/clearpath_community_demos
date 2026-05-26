@@ -59,13 +59,13 @@ datasheets. Key parameters to adjust for your hardware:
 
 The launch file handles the Husky non-default topic names automatically:
 
-| FusionCore topic | Clearpath platform topic |
+| FusionCore default topic | Clearpath platform topic |
 |---|---|
-| `imu/data` | `sensors/imu_0/data` |
-| `odom/wheels` | `platform/odom` |
-| `gnss/fix` | `sensors/gps_0/fix` |
+| `/imu/data` | `/<namespace>/sensors/imu_0/data` |
+| `/odom/wheels` | `/<namespace>/platform/odom` |
+| `/gnss/fix` | `/<namespace>/sensors/gps_0/fix` |
 
-All topics are resolved under the robot namespace (e.g. `a200_0000`) read from `robot.yaml`.
+The namespace is read from `robot.yaml` at launch time (e.g. `a200_0000` for serial number `a200-0000`).
 Pass `setup_path:=<path>` if your robot.yaml is not at `/etc/clearpath/`.
 
 ## Full documentation
