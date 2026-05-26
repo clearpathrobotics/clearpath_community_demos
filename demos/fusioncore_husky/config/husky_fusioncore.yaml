@@ -26,7 +26,7 @@ fusioncore:
     imu.gyro_noise: 0.003           # rad/s : derived from ARW 0.07°/√hr spec
     imu.accel_noise: 0.05           # m/s²  : derived from VRW 0.02 m/s/√hr spec
     imu.remove_gravitational_acceleration: false  # driver includes gravity in linear_acceleration; FusionCore accounts for it internally
-    imu.frame_id: "imu_link"
+    imu.frame_id: "imu_0_link"        # Clearpath Gazebo publishes IMU with frame_id imu_0_link
 
     # ── Wheel encoders: Husky A200 ────────────────────────────────────────────
     # 500 CPR optical encoders through a 24:1 gearbox, 0.1651m wheel radius.

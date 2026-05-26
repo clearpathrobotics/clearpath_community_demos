@@ -2,7 +2,7 @@
 #
 # Hardware:
 #   IMU: Microstrain 3DM-GX5-25 (USB, /dev/microstrain_main)
-#   GPS: u-blox F9P in NMEA mode (USB serial, default /dev/ttyACM0)
+#   GPS: u-blox F9P in NMEA mode (configured via nmea_navsat_driver defaults)
 #
 # Replace a200-0000 with your robot's serial number. Dashes become underscores
 # in the namespace (a200-0000 -> a200_0000).
@@ -35,10 +35,10 @@ sensors:
       xyz: [0.0, 0.0, 0.0]
       rpy: [0.0, 0.0, 0.0]
       ros_parameters:
-        port: /dev/microstrain_main
-        frame_id: imu_link
-        use_enu_frame: true
-        imu_data_rate: 100
+        microstrain_inertial_driver.port: /dev/microstrain_main
+        microstrain_inertial_driver.frame_id: imu_link
+        microstrain_inertial_driver.use_enu_frame: true
+        microstrain_inertial_driver.imu_data_rate: 100
   gps:
     - model: garmin_18x
       urdf_enabled: true
@@ -46,6 +46,3 @@ sensors:
       parent: base_link
       xyz: [0.0, 0.0, 0.0]
       rpy: [0.0, 0.0, 0.0]
-      ros_parameters:
-        port: /dev/ttyACM0
-        baud: 38400

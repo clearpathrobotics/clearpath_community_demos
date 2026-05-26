@@ -47,6 +47,10 @@ def launch_setup(context, *args, **kwargs):
             ('/imu/data', f'{ns}/sensors/imu_0/data'),
             ('/odom/wheels', f'{ns}/platform/odom'),
             ('/gnss/fix', f'{ns}/sensors/gps_0/fix'),
+            # Clearpath RSP publishes TF under the robot namespace (a200_0000/tf,
+            # a200_0000/tf_static). Mirror that so FusionCore sees the same tree.
+            ('/tf', 'tf'),
+            ('/tf_static', 'tf_static'),
         ],
     )
 
