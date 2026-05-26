@@ -44,7 +44,7 @@ def launch_setup(context, *args, **kwargs):
         remappings=[
             ('imu/data', 'sensors/imu_0/data'),
             ('odom/wheels', 'platform/odom'),
-            ('gnss/fix', '/fix'),
+            ('gnss/fix', 'sensors/gps_0/fix'),
         ],
     )
 

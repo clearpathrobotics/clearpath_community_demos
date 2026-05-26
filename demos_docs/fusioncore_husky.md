@@ -63,9 +63,9 @@ The launch file handles the Husky non-default topic names automatically:
 |---|---|
 | `imu/data` | `sensors/imu_0/data` |
 | `odom/wheels` | `platform/odom` |
-| `gnss/fix` | `/fix` |
+| `gnss/fix` | `sensors/gps_0/fix` |
 
-Topics are resolved under the robot namespace (e.g. `a200_0000`) read from `robot.yaml`.
+All topics are resolved under the robot namespace (e.g. `a200_0000`) read from `robot.yaml`.
 Pass `setup_path:=<path>` if your robot.yaml is not at `/etc/clearpath/`.
 
 ## Full documentation
