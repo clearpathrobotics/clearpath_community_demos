@@ -36,7 +36,7 @@ public:
   {
     cmd_pub_ = create_publisher<geometry_msgs::msg::TwistStamped>("cmd_vel", 10);
     odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
-      "platform/odom", 10, [this](nav_msgs::msg::Odometry::ConstSharedPtr msg) { on_odom(*msg); });
+      "platform/odom/filtered", 10, [this](nav_msgs::msg::Odometry::ConstSharedPtr msg) { on_odom(*msg); });
     timer_ = create_wall_timer(kTickPeriod, [this] { tick(); });
     RCLCPP_INFO(get_logger(), "Hello, Clearpath! Driving a 1m x 1m square.");
   }

@@ -39,7 +39,7 @@ class HelloSquare(Node):
     def __init__(self) -> None:
         super().__init__('hello_square')
         self._cmd_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
-        self._odom_sub = self.create_subscription(Odometry, 'platform/odom', self._on_odom, 10)
+        self._odom_sub = self.create_subscription(Odometry, 'platform/odom/filtered', self._on_odom, 10)
         self._side = 0
         self._phase = 'forward'
         self._have_odom = False
