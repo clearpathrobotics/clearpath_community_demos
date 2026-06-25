@@ -76,3 +76,76 @@ ros2 launch hello_clearpath hello_clearpath.launch.py \
 ```
 
 The robot will drive a 1 m × 1 m square and log a message at each corner.
+
+## Docker Compose (Jazzy, sim + viz + demo / robot + demo)
+
+The demo folder includes a Jazzy-only compose stack with two profiles:
+
+- `sim`: simulation + visualization + `hello_clearpath`
+- `robot`: `hello_clearpath` (expects robot stack already running on host)
+
+Prerequisites:
+
+- Install Docker on the Linux host machine before using either profile.
+- For `sim`, `viz`, and demo, Docker must be available on the host.
+- For `robot` and demo, Docker must be available on the host.
+
+Safety warning (`robot` profile):
+
+- This mode can command a physical robot. Ensure an E-stop is available, the area is clear, and the robot is safely supported before launching.
+
+```bash
+cd demos/hello_clearpath
+xhost +local:
+docker compose --profile sim up
+```
+
+For robot + demo:
+
+```bash
+cd demos/hello_clearpath
+docker compose --profile robot up
+```
+
+By default, the stack creates and uses a writable
+`demos/hello_clearpath/config/.setup_path/` directory, auto-seeded from
+`config/robot.yaml`.
+
+For the `robot` profile, the stack uses `/etc/clearpath/robot.yaml` on the
+Linux host by default.
+
+To override the robot configuration, provide a host setup directory containing
+your own `robot.yaml`:
+
+```bash
+cd demos/hello_clearpath
+SETUP_PATH_HOST=/path/to/clearpath_setup docker compose --profile sim up
+ROBOT_SETUP_PATH_HOST=/path/to/clearpath_setup docker compose --profile robot up
+```
+
+By default, `hello_clearpath` services use the published GHCR image:
+
+- `ghcr.io/clearpathrobotics/clearpath_community_demos:jazzy-hello_clearpath-latest`
+
+The hello container image also ships with a default config at
+`/etc/clearpath/robot.yaml` (copied from `config/robot.yaml` at build time),
+so it is usable out-of-the-box. You can still override it by bind-mounting a
+host setup directory and setting `SETUP_PATH` accordingly.
+
+The entrypoint waits for simulation readiness by default before launching the
+demo command. To tune this behavior:
+
+- `WAIT_FOR_SIM=true|false` (default: `true`)
+- `WAIT_FOR_TIMEOUT_SEC=<seconds>` (default: `60`)
+
+## GitHub Image Build
+
+This repository includes a GitHub Actions workflow that builds the hello image
+from `demos/hello_clearpath/Dockerfile`:
+
+- Pull requests: build validation only (no push)
+- Pushes to `main`: build and push to GHCR
+
+Published tags:
+
+- `ghcr.io/clearpathrobotics/clearpath_community_demos:jazzy-hello_clearpath-latest`

@@ -6,6 +6,8 @@ sort: 2
 
 This example shows whole-body motion planning and control for a mobile manipulator. The platform, **Reachback**, pairs a [Clearpath Ridgeback](https://clearpathrobotics.com/ridgeback-indoor-robot-platform/) omnidirectional base with a [Doosan H2017](https://www.doosanrobotics.com/en/product-solutions/product/h-series/h2017/) 6-DOF industrial arm and an [OnRobot 2FG14](https://onrobot.com/en/products/2fg14-finger-gripper), yielding a 9-DOF system (3 base + 6 arm) capable of whole-body motion planning.
 
+![Reachback simulation render](https://raw.githubusercontent.com/clearpathrobotics/clearpath_community_demos/main/demos/unified_manipulation_config_ws/resources/reachback.png)
+
 Please note that this example is meant for simulation only and has not been tested with hardware!
 
 **Source:** [`demos/mobile_manipulation_ws/`](https://github.com/clearpathrobotics/clearpath_community_demos/tree/main/demos/unified_manipulation_config_ws)

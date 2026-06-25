@@ -17,6 +17,8 @@ constexpr double kLinearSpeed = 0.2;   // m/s
 constexpr double kAngularSpeed = 0.5;  // rad/s
 constexpr double kPositionToleranceM = 0.02;
 constexpr double kHeadingToleranceRad = 2.0 * M_PI / 180.0;
+constexpr double kDirectionProbeDistanceM = 0.08;
+constexpr double kDirectionFlipThresholdM = 0.03;
 constexpr auto kTickPeriod = std::chrono::milliseconds(50);
 
 double yaw_from_quaternion(const geometry_msgs::msg::Quaternion & q)
@@ -74,6 +76,13 @@ private:
 
   double distance_traveled() const { return std::hypot(x_ - start_x_, y_ - start_y_); }
 
+  double forward_progress() const
+  {
+    const double dx = x_ - start_x_;
+    const double dy = y_ - start_y_;
+    return dx * std::cos(start_yaw_) + dy * std::sin(start_yaw_);
+  }
+
   double heading_change() const { return std::abs(angle_diff(yaw_, start_yaw_)); }
 
   void tick()
@@ -87,7 +96,19 @@ private:
     {
       if (distance_traveled() + kPositionToleranceM < kSideLengthM)
       {
-        publish_cmd(kLinearSpeed, 0.0);
+        if (!direction_checked_ && distance_traveled() >= kDirectionProbeDistanceM)
+        {
+          if (forward_progress() < -kDirectionFlipThresholdM)
+          {
+            linear_sign_ = -1.0;
+            RCLCPP_WARN(
+              get_logger(),
+              "Detected inverted linear direction from odometry; switching to reverse command "
+              "sign.");
+          }
+          direction_checked_ = true;
+        }
+        publish_cmd(linear_sign_ * kLinearSpeed, 0.0);
       }
       else
       {
@@ -132,6 +153,8 @@ private:
   double start_x_{0.0};
   double start_y_{0.0};
   double start_yaw_{0.0};
+  double linear_sign_{1.0};
+  bool direction_checked_{false};
 };
 
 int main(int argc, char ** argv)

@@ -30,6 +30,37 @@ Clearpath platform.
    - A link to the example `robot.yaml` and any required edits.
 5. Open a **pull request** against `main`.
 
+## Local docs development
+
+The repository ships a [Dev Container](https://containers.dev/) configured for
+editing and previewing the Jekyll documentation site. It uses a Ruby 3.2
+image, installs all gem dependencies automatically on creation, and forwards
+port 4000 so you can view the site in your browser.
+
+### Prerequisites
+
+- [Docker](https://docs.docker.com/get-docker/) (or a compatible runtime)
+- [VS Code](https://code.visualstudio.com/) with the
+  [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+### Steps
+
+1. Open the repository root in VS Code.
+2. When prompted **"Reopen in Container"**, click it — or open the Command
+   Palette (`Ctrl+Shift+P`) and run **Dev Containers: Reopen in Container**.
+3. VS Code builds the container image and runs `bundle install` automatically.
+   This may take a minute on the first launch; subsequent opens are instant.
+4. Once inside the container, start the Jekyll server:
+
+   ```bash
+   bundle exec jekyll serve --livereload
+   ```
+
+5. Open [http://localhost:4000](http://localhost:4000) in your browser (VS Code
+   also shows a notification with the forwarded URL).
+
+The site hot-reloads whenever you save a Markdown or layout file.
+
 ## Code style
 
 This repository uses [pre-commit](https://pre-commit.com/) to run style and

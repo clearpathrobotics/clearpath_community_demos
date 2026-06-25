@@ -1,4 +1,4 @@
-serial_number: a300-0000
+serial_number: a300-00000
 version: 0
 system:
   hosts:
@@ -11,5 +11,12 @@ system:
       implementation: rmw_fastrtps_cpp
 platform:
   controller: ps4
-  attachments: []
+  attachments:
+    - name: top_plate
+      type: a300.top_plate
+      model: default
+      parent: default_mount
+      xyz: [0.0, 0.0, 0.0]
+      rpy: [0.0, 0.0, 0.0]
+      enabled: true
 sensors: {}

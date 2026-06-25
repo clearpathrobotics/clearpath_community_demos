@@ -1,0 +1,139 @@
+# docker-compose.yml - hello_clearpath + clearpath_docker (Jazzy only)
+#
+# This compose stack launches:
+#   - Profile `sim`: Gazebo simulation + RViz + hello_clearpath
+#   - Profile `robot`: hello_clearpath against a running host robot stack
+#
+# Required once per shell before first run (X11):
+#   xhost +local:
+#
+# Override knobs (all optional):
+#   SETUP_PATH_HOST  Host setup directory containing robot.yaml
+#                    (default: ./config/.setup_path, auto-seeded from ./config/robot.yaml)
+#   SETUP_PATH       Setup path in containers (default: /home/ros/setup/path/)
+#   ROBOT_SETUP_PATH_HOST Host setup directory for robot profile (default: /etc/clearpath/)
+#   ROBOT_SETUP_PATH      Setup path in robot-profile containers (default: /etc/clearpath/)
+#   HELLO_LANGUAGE   cpp | python
+#   USE_SIM_TIME     true | false (default: true for sim, false for robot)
+#
+# Usage:
+#   docker compose --profile sim up
+#   docker compose --profile robot up
+
+services:
+  setup_init:
+    image: alpine:3.20
+    container_name: cpr-setup-init-jazzy
+    command: >
+      sh -lc "
+        mkdir -p /setup/path &&
+        if [ ! -f /setup/path/robot.yaml ]; then
+          cp /seed/robot.yaml /setup/path/robot.yaml;
+        fi &&
+        chmod -R a+rwX /setup/path
+      "
+    volumes:
+      - ${SETUP_PATH_HOST:-./config/.setup_path}:/setup/path
+      - ./config/robot.yaml:/seed/robot.yaml:ro
+
+  sim:
+    image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-sim-latest
+    container_name: cpr-sim-jazzy
+    profiles: ["sim"]
+    user: ros
+    network_mode: host
+    ipc: host
+    environment:
+      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      DISPLAY: ${DISPLAY:-:0}
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+    volumes:
+      - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
+    depends_on:
+      setup_init:
+        condition: service_completed_successfully
+    stdin_open: true
+    tty: true
+
+  viz:
+    image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-viz-latest
+    container_name: cpr-viz-jazzy
+    profiles: ["sim"]
+    user: ros
+    network_mode: host
+    ipc: host
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      DISPLAY: ${DISPLAY:-:0}
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+    volumes:
+      - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
+    depends_on:
+      setup_init:
+        condition: service_completed_successfully
+      sim:
+        condition: service_started
+    stdin_open: true
+    tty: true
+
+  hello_clearpath:
+    image: ghcr.io/clearpathrobotics/clearpath_community_demos:jazzy-hello_clearpath-latest
+    container_name: cpr-hello-clearpath-jazzy
+    profiles: ["sim"]
+    network_mode: host
+    ipc: host
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      HELLO_LANGUAGE: ${HELLO_LANGUAGE:-cpp}
+      USE_SIM_TIME: ${USE_SIM_TIME:-true}
+      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+    command: >
+      ros2 launch hello_clearpath hello_clearpath.launch.py
+        language:=${HELLO_LANGUAGE:-cpp}
+        use_sim_time:=${USE_SIM_TIME:-true}
+        setup_path:=${SETUP_PATH:-/home/ros/setup/path/}
+    volumes:
+      - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/:ro
+    depends_on:
+      setup_init:
+        condition: service_completed_successfully
+      sim:
+        condition: service_started
+    stdin_open: true
+    tty: true
+
+  hello_clearpath_robot:
+    image: ghcr.io/clearpathrobotics/clearpath_community_demos:jazzy-hello_clearpath-latest
+    container_name: cpr-hello-clearpath-robot-jazzy
+    profiles: ["robot"]
+    network_mode: host
+    ipc: host
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
+      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      HELLO_LANGUAGE: ${HELLO_LANGUAGE:-cpp}
+      USE_SIM_TIME: ${USE_SIM_TIME:-false}
+      WAIT_FOR_SIM: ${WAIT_FOR_SIM:-false}
+      SETUP_PATH: ${ROBOT_SETUP_PATH:-/etc/clearpath/}
+    command: >
+      ros2 launch hello_clearpath hello_clearpath.launch.py
+        language:=${HELLO_LANGUAGE:-cpp}
+        use_sim_time:=${USE_SIM_TIME:-false}
+        setup_path:=${ROBOT_SETUP_PATH:-/etc/clearpath/}
+    volumes:
+      - ${ROBOT_SETUP_PATH_HOST:-/etc/clearpath/}:/etc/clearpath/:ro
+    stdin_open: true
+    tty: true

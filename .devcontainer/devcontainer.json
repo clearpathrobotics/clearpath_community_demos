@@ -1,0 +1,22 @@
+{
+  "name": "clearpath-community-demos-docs",
+  "image": "mcr.microsoft.com/devcontainers/ruby:3.2-bookworm",
+  "postCreateCommand": "bundle install",
+  "forwardPorts": [
+    4000
+  ],
+  "portsAttributes": {
+    "4000": {
+      "label": "Jekyll",
+      "onAutoForward": "notify"
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Shopify.ruby-lsp",
+        "streetsidesoftware.code-spell-checker"
+      ]
+    }
+  }
+}

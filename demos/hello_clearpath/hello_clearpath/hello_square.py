@@ -19,6 +19,8 @@ LINEAR_SPEED = 0.2  # m/s
 ANGULAR_SPEED = 0.5  # rad/s
 POSITION_TOLERANCE_M = 0.02
 HEADING_TOLERANCE_RAD = math.radians(2.0)
+DIRECTION_PROBE_DISTANCE_M = 0.08
+DIRECTION_FLIP_THRESHOLD_M = 0.03
 
 
 def yaw_from_quaternion(q) -> float:
@@ -39,7 +41,9 @@ class HelloSquare(Node):
     def __init__(self) -> None:
         super().__init__('hello_square')
         self._cmd_pub = self.create_publisher(TwistStamped, 'cmd_vel', 10)
-        self._odom_sub = self.create_subscription(Odometry, 'platform/odom/filtered', self._on_odom, 10)
+        self._odom_sub = self.create_subscription(
+            Odometry, 'platform/odom/filtered', self._on_odom, 10
+        )
         self._side = 0
         self._phase = 'forward'
         self._have_odom = False
@@ -49,6 +53,8 @@ class HelloSquare(Node):
         self._start_x = 0.0
         self._start_y = 0.0
         self._start_yaw = 0.0
+        self._linear_sign = 1.0
+        self._direction_checked = False
         self._timer = self.create_timer(0.05, self._tick)
         self.get_logger().info('Hello, Clearpath! Driving a 1m x 1m square.')
 
@@ -77,13 +83,28 @@ class HelloSquare(Node):
     def _heading_change(self) -> float:
         return abs(angle_diff(self._yaw, self._start_yaw))
 
+    def _forward_progress(self) -> float:
+        dx = self._x - self._start_x
+        dy = self._y - self._start_y
+        return dx * math.cos(self._start_yaw) + dy * math.sin(self._start_yaw)
+
     def _tick(self) -> None:
         if not self._have_odom:
             return
 
         if self._phase == 'forward':
             if self._distance_traveled() + POSITION_TOLERANCE_M < SIDE_LENGTH_M:
-                self._publish(linear=LINEAR_SPEED)
+                if (
+                    not self._direction_checked
+                ) and self._distance_traveled() >= DIRECTION_PROBE_DISTANCE_M:
+                    if self._forward_progress() < -DIRECTION_FLIP_THRESHOLD_M:
+                        self._linear_sign = -1.0
+                        self.get_logger().warning(
+                            'Detected inverted linear direction from odometry; '
+                            'switching to reverse command sign.'
+                        )
+                    self._direction_checked = True
+                self._publish(linear=self._linear_sign * LINEAR_SPEED)
             else:
                 self._publish()
                 self.get_logger().info(f'Side {self._side + 1} complete.')

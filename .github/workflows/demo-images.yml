@@ -1,0 +1,62 @@
+name: demo images
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - demos/hello_clearpath/**
+      - .github/workflows/demo-images.yml
+  pull_request:
+    paths:
+      - demos/hello_clearpath/**
+      - .github/workflows/demo-images.yml
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/clearpath_community_demos
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build (PR)
+        if: github.event_name == 'pull_request'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: demos/hello_clearpath/Dockerfile
+          push: false
+          tags: ${{ env.IMAGE_NAME }}:jazzy-hello_clearpath-pr-${{ github.event.pull_request.number }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and Push (main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: demos/hello_clearpath/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_NAME }}:jazzy-hello_clearpath-latest
+            ${{ env.IMAGE_NAME }}:jazzy-hello_clearpath-${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

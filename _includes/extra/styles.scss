@@ -4,3 +4,131 @@
 .content-wrap {
     max-width: none;
 }
+
+// Sidebar header — black background matching the top logo bar.
+.header {
+    color: #fff;
+    background: #000000;
+    display: inline-block;
+    height: 140px;
+}
+
+.title a {
+    position: relative;
+    top: 45px;
+}
+
+a img {
+    border: 0;
+    outline: none;
+}
+
+.header input {
+    position: relative;
+    top: 45px;
+}
+
+// Full-width black logo bar above the content area.
+.header-bar-wrap {
+    background: #000000;
+    position: relative;
+    min-height: 80px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+.header-row {
+    display: flex;
+    align-items: center;
+    margin-top: 0;
+    height: 100%;
+    width: 100%;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.header-logo {
+    background: #000000;
+    outline: #000000;
+    color: #000000;
+    display: inline-block;
+    background-size: 95% 95%;
+    background-repeat: no-repeat;
+    background-position-x: center;
+    background-position-y: center;
+    margin-left: 15px;
+    margin-right: 10px;
+    margin-top: 3px;
+}
+
+.header-ul {
+    height: 100%;
+    overflow: auto;
+    text-align: center;
+    align-items: center;
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.cpr-logo {
+    background-image: url('{{ site.baseurl }}/media/cpr_logo.png');
+    width: 355px;
+    height: 50px;
+}
+
+.github-logo {
+    background-image: url('{{ site.baseurl }}/media/github_logo.png');
+    height: 40px;
+    width: 40px;
+}
+
+// Yellow section captions in the sidebar table of contents.
+.toctree .caption {
+    color: #ffcd00;
+}
+
+// Remove Home icon.
+.fa-home::before {
+    content: "";
+}
+
+// Remove plus icon.
+.fa-plus-square-o:before {
+    content: "";
+}
+
+figure {
+    padding: 4px;
+    margin: auto;
+}
+
+figcaption {
+    background-color: white;
+    color: black;
+    font-style: italic;
+    font-size: small;
+    padding: 2px;
+    text-align: center;
+}
+
+.aligncenter {
+    text-align: center;
+}
+
+td {
+    text-align: left;
+    vertical-align: middle;
+}
+
+.center-table {
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+}
+
+.markdown-body ul {
+    padding-left: 1em;
+}

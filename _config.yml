@@ -21,6 +21,9 @@ exclude:
   - vendor
   - demos/
   - README.md
+  - build/
+  - install/
+  - log/
 
 plugins:
   - jemoji
