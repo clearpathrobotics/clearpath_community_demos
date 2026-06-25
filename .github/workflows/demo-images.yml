@@ -24,7 +24,7 @@ jobs:
       IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/clearpath_community_demos
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
