@@ -32,6 +32,9 @@ select = [
 ]
 ignore = ['D100','D101','D102','D103','D104','D105','D106','D107','D203','D212','D404','D415']
 
+[lint.per-file-ignores]
+"**/launch/*.launch.py" = ["INP001"]
+
 [lint.isort]
 force-sort-within-sections = true
 order-by-type = false

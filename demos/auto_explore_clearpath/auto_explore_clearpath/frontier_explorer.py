@@ -18,26 +18,22 @@
 
 from collections import deque
 import math
-from typing import Deque, List, Optional, Tuple
 
 from action_msgs.msg import GoalStatus
 from geometry_msgs.msg import PoseStamped, Quaternion
 from nav2_msgs.action import NavigateToPose
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.srv import GetMap
-
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.duration import Duration
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
 from rclpy.time import Time
-
 from tf2_ros import Buffer, LookupException, TransformException
 from tf2_ros.transform_listener import TransformListener
 
-
-GridPoint = Tuple[int, int]
+GridPoint = tuple[int, int]
 
 
 class FrontierExplorer(Node):
@@ -66,10 +62,10 @@ class FrontierExplorer(Node):
         self._goal_revisit_distance_m = self.get_parameter('goal_revisit_distance_m').value
         self._exploration_complete_cycles = self.get_parameter('exploration_complete_cycles').value
 
-        self._latest_map: Optional[OccupancyGrid] = None
-        self._goal_sent_at: Optional[Time] = None
-        self._goal_xy: Optional[Tuple[float, float]] = None
-        self._visited_goals: Deque[Tuple[float, float]] = deque(maxlen=100)
+        self._latest_map: OccupancyGrid | None = None
+        self._goal_sent_at: Time | None = None
+        self._goal_xy: tuple[float, float] | None = None
+        self._visited_goals: deque[tuple[float, float]] = deque(maxlen=100)
         self._no_frontier_cycles = 0
         self._reported_waiting_for_map = False
         self._reported_waiting_for_nav2 = False
@@ -153,7 +149,7 @@ class FrontierExplorer(Node):
         self._map_request_in_flight = False
         try:
             response = future.result()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.get_logger().warn(f'failed to fetch map from slam_toolbox: {exc}')
             return
 
@@ -176,13 +172,13 @@ class FrontierExplorer(Node):
     def _on_cancel_done(self, future) -> None:
         try:
             _ = future.result()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.get_logger().warn(f'failed to cancel goal cleanly: {exc}')
         self._goal_handle = None
         self._result_future = None
         self._goal_sent_at = None
 
-    def _robot_position_in_map(self) -> Optional[Tuple[float, float]]:
+    def _robot_position_in_map(self) -> tuple[float, float] | None:
         map_frame = self._latest_map.header.frame_id or 'map'
         try:
             tf = self._tf_buffer.lookup_transform(
@@ -204,20 +200,20 @@ class FrontierExplorer(Node):
     def _select_frontier_goal(
         self,
         occ: OccupancyGrid,
-        robot_xy: Tuple[float, float],
-    ) -> Optional[Tuple[float, float]]:
+        robot_xy: tuple[float, float],
+    ) -> tuple[float, float] | None:
         width = occ.info.width
         height = occ.info.height
         resolution = occ.info.resolution
         origin_x = occ.info.origin.position.x
         origin_y = occ.info.origin.position.y
 
-        data: List[int] = list(occ.data)
+        data: list[int] = list(occ.data)
         robot_mx = int((robot_xy[0] - origin_x) / resolution)
         robot_my = int((robot_xy[1] - origin_y) / resolution)
 
         best_score = -1.0
-        best_goal: Optional[GridPoint] = None
+        best_goal: GridPoint | None = None
 
         for my in range(1, height - 1):
             for mx in range(1, width - 1):
@@ -284,7 +280,7 @@ class FrontierExplorer(Node):
 
     @staticmethod
     def _is_safe_from_obstacles(
-        data: List[int],
+        data: list[int],
         width: int,
         height: int,
         mx: int,
@@ -305,12 +301,9 @@ class FrontierExplorer(Node):
 
     def _was_recently_visited(self, x: float, y: float) -> bool:
         threshold = self._goal_revisit_distance_m
-        for vx, vy in self._visited_goals:
-            if math.hypot(x - vx, y - vy) < threshold:
-                return True
-        return False
+        return any(math.hypot(x - vx, y - vy) < threshold for vx, vy in self._visited_goals)
 
-    def _send_goal(self, goal_xy: Tuple[float, float], robot_xy: Tuple[float, float]) -> None:
+    def _send_goal(self, goal_xy: tuple[float, float], robot_xy: tuple[float, float]) -> None:
         goal = NavigateToPose.Goal()
         pose = PoseStamped()
         pose.header.frame_id = self._latest_map.header.frame_id or 'map'
@@ -332,7 +325,7 @@ class FrontierExplorer(Node):
     def _on_goal_response(self, future) -> None:
         try:
             goal_handle = future.result()
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.get_logger().warn(f'goal request failed: {exc}')
             self._goal_handle = None
             self._result_future = None
@@ -355,7 +348,7 @@ class FrontierExplorer(Node):
         try:
             result = future.result()
             status = result.status
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.get_logger().warn(f'goal result failed: {exc}')
 
         if self._goal_xy is not None:

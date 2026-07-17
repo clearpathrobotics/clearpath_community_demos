@@ -16,15 +16,12 @@
 
 """Relay namespaced TF topics to global TF topics for Nav2 compatibility."""
 
-import os
-from typing import Optional
-
-from tf2_msgs.msg import TFMessage
+from pathlib import Path
 
 import rclpy
 from rclpy.node import Node
 from rclpy.qos import DurabilityPolicy, QoSProfile, ReliabilityPolicy
-
+from tf2_msgs.msg import TFMessage
 import yaml
 
 
@@ -93,15 +90,15 @@ class TfRelay(Node):
         )
 
     def _read_namespace_from_setup(self, setup_path: str) -> str:
-        robot_yaml = os.path.join(setup_path, 'robot.yaml')
-        if not os.path.exists(robot_yaml):
+        robot_yaml = Path(setup_path) / 'robot.yaml'
+        if not robot_yaml.exists():
             self.get_logger().warn(f'robot.yaml not found at {robot_yaml}')
             return ''
 
         try:
-            with open(robot_yaml, 'r', encoding='utf-8') as f:
+            with robot_yaml.open(encoding='utf-8') as f:
                 config = yaml.safe_load(f) or {}
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             self.get_logger().warn(f'failed reading robot.yaml: {exc}')
             return ''
 
@@ -115,7 +112,7 @@ class TfRelay(Node):
         system = config.get('system', {})
         ros2 = system.get('ros2', {})
 
-        namespace: Optional[str] = ros2.get('namespace')
+        namespace: str | None = ros2.get('namespace')
         if namespace:
             return str(namespace)
 

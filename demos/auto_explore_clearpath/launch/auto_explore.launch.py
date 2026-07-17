@@ -17,13 +17,10 @@
 from pathlib import Path
 
 from clearpath_config.clearpath_config import ClearpathConfig
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
 from launch.substitutions import LaunchConfiguration
-
 from launch_ros.actions import Node, PushRosNamespace
-
 
 ARGUMENTS = [
     DeclareLaunchArgument(
