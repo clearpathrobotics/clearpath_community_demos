@@ -15,10 +15,15 @@
 #   ROBOT_SETUP_PATH      Setup path in robot-profile containers (default: /etc/clearpath/)
 #   HELLO_LANGUAGE   cpp | python
 #   USE_SIM_TIME     true | false (default: true for sim, false for robot)
+#   RMW_IMPLEMENTATION  Override ROS 2 middleware (default: unset, uses FastDDS)
+#                       Set to rmw_cyclonedds_cpp once all images include CycloneDDS
 #
 # Usage:
 #   docker compose --profile sim up
 #   docker compose --profile robot up
+#
+# GPU acceleration (NVIDIA — requires NVIDIA Container Toolkit):
+#   docker compose -f docker-compose.yml -f docker-compose.nvidia.yaml --profile sim up
 
 services:
   setup_init:
@@ -48,11 +53,24 @@ services:
       DISPLAY: ${DISPLAY:-:0}
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
-      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
     volumes:
       - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
+    healthcheck:
+      test:
+        - "CMD"
+        - "bash"
+        - "-c"
+        - >-
+          source /opt/ros/jazzy/setup.bash &&
+          ros2 topic list 2>/dev/null | grep -qF '/clock' &&
+          ros2 topic list 2>/dev/null | grep -qE '/platform/odom/filtered'
+      interval: 10s
+      timeout: 10s
+      retries: 24
+      start_period: 60s
     depends_on:
       setup_init:
         condition: service_completed_successfully
@@ -73,7 +91,7 @@ services:
       DISPLAY: ${DISPLAY:-:0}
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
-      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
     volumes:
       - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
@@ -95,7 +113,7 @@ services:
     environment:
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
-      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
       HELLO_LANGUAGE: ${HELLO_LANGUAGE:-cpp}
       USE_SIM_TIME: ${USE_SIM_TIME:-true}
       SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
@@ -110,7 +128,7 @@ services:
       setup_init:
         condition: service_completed_successfully
       sim:
-        condition: service_started
+        condition: service_healthy
     stdin_open: true
     tty: true
 
@@ -123,7 +141,7 @@ services:
     environment:
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
-      FASTDDS_BUILTIN_TRANSPORTS: ${FASTDDS_BUILTIN_TRANSPORTS:-UDPv4}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
       HELLO_LANGUAGE: ${HELLO_LANGUAGE:-cpp}
       USE_SIM_TIME: ${USE_SIM_TIME:-false}
       WAIT_FOR_SIM: ${WAIT_FOR_SIM:-false}

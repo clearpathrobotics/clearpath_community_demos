@@ -9,9 +9,10 @@ for write-ups of each demo and instructions on how to run them.
 
 ## Layout
 
-```
+```text
 demos/
 ├── hello_clearpath/                     # minimal example demo
+├── auto_explore_clearpath/              # autonomous mapping exploration demo
 ├── unified_manipulation_config_ws/      # whole-body mobile manipulation example
 └── <your_demo_here>/                    # add your contribution
 ```

@@ -89,6 +89,11 @@ Prerequisites:
 - Install Docker on the Linux host machine before using either profile.
 - For `sim`, `viz`, and demo, Docker must be available on the host.
 - For `robot` and demo, Docker must be available on the host.
+- **NVIDIA GPU with `nvidia-container-toolkit` is strongly recommended for the `sim` profile.**
+
+> **Warning (`sim` profile):** Running without an NVIDIA GPU can make Gazebo
+> simulation very slow. Robot motion and sensors may lag behind real time,
+> which can cause unstable demo behavior.
 
 Safety warning (`robot` profile):
 
@@ -98,6 +103,14 @@ Safety warning (`robot` profile):
 cd demos/hello_clearpath
 xhost +local:
 docker compose --profile sim up
+```
+
+For better sim performance with NVIDIA:
+
+```bash
+cd demos/hello_clearpath
+xhost +local:
+docker compose -f docker-compose.yml -f docker-compose.nvidia.yaml --profile sim up
 ```
 
 For robot + demo:

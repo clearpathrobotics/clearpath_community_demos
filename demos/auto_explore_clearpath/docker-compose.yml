@@ -1,0 +1,162 @@
+# docker-compose.yml - auto_explore_clearpath + clearpath_docker (Jazzy)
+#
+# This stack launches:
+#   - Gazebo simulation
+#   - Nav2 + SLAM
+#   - RViz visualization
+#   - Auto frontier explorer demo node
+#
+# Usage:
+#   cd demos/auto_explore_clearpath
+#   xhost +local:
+#   docker compose up --build
+#
+# With NVIDIA GPU:
+#   docker compose -f docker-compose.yml -f docker-compose.nvidia.yaml up --build
+
+services:
+  setup_init:
+    image: alpine:3.20
+    container_name: cpr-setup-init-auto-explore-jazzy
+    command: >
+      sh -lc "
+        mkdir -p /setup/path &&
+        test -f /setup/path/robot.yaml &&
+        chmod -R a+rwX /setup/path
+      "
+    volumes:
+      - ${SETUP_PATH_HOST:-./config}:/setup/path
+
+  sim:
+    image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-sim-latest
+    container_name: cpr-sim-auto-explore-jazzy
+    user: ros
+    network_mode: host
+    ipc: host
+    environment:
+      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      DISPLAY: ${DISPLAY:-:0}
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>none</ParticipantIndex></Discovery></Domain></CycloneDDS>}'
+    volumes:
+      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
+    healthcheck:
+      test:
+        - "CMD"
+        - "bash"
+        - "-c"
+        - >-
+          source /opt/ros/jazzy/setup.bash &&
+          timeout 8 ros2 topic echo /clock --once >/dev/null 2>&1 &&
+          ros2 topic list --no-daemon 2>/dev/null | grep -qE '/[^/]+/platform/odom/filtered$$'
+      interval: 10s
+      timeout: 15s
+      retries: 24
+      start_period: 120s
+    depends_on:
+      setup_init:
+        condition: service_completed_successfully
+    stdin_open: true
+    tty: true
+
+  nav2:
+    image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-nav2-latest
+    container_name: cpr-nav2-auto-explore-jazzy
+    network_mode: host
+    environment:
+      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      USE_SIM_TIME: ${USE_SIM_TIME:-true}
+      WAIT_FOR_SIM: ${NAV2_WAIT_FOR_SIM:-true}
+      NAV2_ENABLE_SLAM: ${NAV2_ENABLE_SLAM:-true}
+      NAV2_SLAM_SYNC: ${NAV2_SLAM_SYNC:-false}
+      AUTO_NAV2_STARTUP: ${AUTO_NAV2_STARTUP:-true}
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>none</ParticipantIndex></Discovery></Domain></CycloneDDS>}'
+    volumes:
+      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+    healthcheck:
+      test:
+        - "CMD"
+        - "bash"
+        - "-c"
+        - >-
+          source /opt/ros/jazzy/setup.bash &&
+          ros2 node list --no-daemon 2>/dev/null | grep -qE '/[^/]+/bt_navigator$$' &&
+          ( [[ "${NAV2_ENABLE_SLAM:-false}" != "true" ]] || ros2 node list --no-daemon 2>/dev/null | grep -qE 'slam_toolbox' )
+      interval: 10s
+      timeout: 10s
+      retries: 24
+      start_period: 150s
+    depends_on:
+      setup_init:
+        condition: service_completed_successfully
+      sim:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+  auto_explore:
+    image: cpr-auto-explore-clearpath:jazzy-local
+    container_name: cpr-auto-explore-jazzy
+    build:
+      context: ../..
+      dockerfile: demos/auto_explore_clearpath/Dockerfile
+    network_mode: host
+    ipc: host
+    environment:
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>none</ParticipantIndex></Discovery></Domain></CycloneDDS>}'
+      WAIT_FOR_SIM: ${WAIT_FOR_SIM:-true}
+      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      USE_SIM_TIME: ${AUTO_EXPLORE_USE_SIM_TIME:-false}
+      AUTO_EXPLORE_MAX_GOAL_DISTANCE_M: ${AUTO_EXPLORE_MAX_GOAL_DISTANCE_M:-8.5}
+    command: >
+      ros2 launch auto_explore_clearpath auto_explore.launch.py
+        use_sim_time:=${AUTO_EXPLORE_USE_SIM_TIME:-false}
+        setup_path:=${SETUP_PATH:-/home/ros/setup/path/}
+        max_goal_distance_m:=${AUTO_EXPLORE_MAX_GOAL_DISTANCE_M:-8.5}
+    volumes:
+      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+    depends_on:
+      setup_init:
+        condition: service_completed_successfully
+      nav2:
+        condition: service_healthy
+    stdin_open: true
+    tty: true
+
+  viz:
+    image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-viz-latest
+    container_name: cpr-viz-auto-explore-jazzy
+    user: ros
+    network_mode: host
+    ipc: host
+    devices:
+      - /dev/dri:/dev/dri
+    environment:
+      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      DISPLAY: ${DISPLAY:-:0}
+      CLEARPATH_VIZ_CONFIG: ${CLEARPATH_VIZ_CONFIG:-navigation}
+      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
+      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
+      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
+      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>none</ParticipantIndex></Discovery></Domain></CycloneDDS>}'
+    volumes:
+      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+      - /tmp/.X11-unix:/tmp/.X11-unix:rw
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
+    depends_on:
+      setup_init:
+        condition: service_completed_successfully
+      sim:
+        condition: service_started
+    stdin_open: true
+    tty: true

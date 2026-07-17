@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+from auto_explore_clearpath.tf_relay import main
+
+
+if __name__ == '__main__':
+    main()
