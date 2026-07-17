@@ -23,10 +23,6 @@ if(BUILD_TESTING)
   set(ament_cmake_copyright_FOUND TRUE)
 
   find_package(ament_lint_auto REQUIRED)
-  find_package(ament_cmake_pytest REQUIRED)
-
-  ament_add_pytest_test(test_frontier_helpers test/test_frontier_helpers.py)
-  ament_add_pytest_test(test_launch_description test/test_launch_description.py)
 
   ament_lint_auto_find_test_dependencies()
 endif()

@@ -1,1 +1,3 @@
-.setup_path/
+*
+!.gitignore
+!robot.yaml
