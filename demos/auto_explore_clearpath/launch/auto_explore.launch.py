@@ -70,9 +70,7 @@ def launch_setup(context, *args, **kwargs):
 
     namespace = namespace_arg.perform(context)
     if not namespace:
-        clearpath_config = ClearpathConfig(
-            str(Path(setup_path.perform(context)) / 'robot.yaml')
-        )
+        clearpath_config = ClearpathConfig(str(Path(setup_path.perform(context)) / 'robot.yaml'))
         namespace = clearpath_config.system.namespace
 
     tf_relay_node = Node(
@@ -80,11 +78,13 @@ def launch_setup(context, *args, **kwargs):
         executable='tf_relay_py',
         name='tf_relay',
         output='screen',
-        parameters=[{
-            'use_sim_time': use_sim_time,
-            'setup_path': setup_path,
-            'namespace': namespace,
-        }],
+        parameters=[
+            {
+                'use_sim_time': use_sim_time,
+                'setup_path': setup_path,
+                'namespace': namespace,
+            }
+        ],
     )
 
     frontier_node = Node(
@@ -92,12 +92,14 @@ def launch_setup(context, *args, **kwargs):
         executable='frontier_explorer_py',
         name='frontier_explorer',
         output='screen',
-        parameters=[{
-            'use_sim_time': use_sim_time,
-            'replan_period_sec': replan_period_sec,
-            'goal_timeout_sec': goal_timeout_sec,
-            'max_goal_distance_m': max_goal_distance_m,
-        }],
+        parameters=[
+            {
+                'use_sim_time': use_sim_time,
+                'replan_period_sec': replan_period_sec,
+                'goal_timeout_sec': goal_timeout_sec,
+                'max_goal_distance_m': max_goal_distance_m,
+            }
+        ],
     )
 
     return [
@@ -105,7 +107,7 @@ def launch_setup(context, *args, **kwargs):
         GroupAction([
             PushRosNamespace(namespace),
             frontier_node,
-        ])
+        ]),
     ]
 
 

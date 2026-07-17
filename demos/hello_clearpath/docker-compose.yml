@@ -9,7 +9,7 @@
 #
 # Override knobs (all optional):
 #   SETUP_PATH_HOST  Host setup directory containing robot.yaml
-#                    (default: ./config/.setup_path, auto-seeded from ./config/robot.yaml)
+#                    (default: ./config)
 #   SETUP_PATH       Setup path in containers (default: /home/ros/setup/path/)
 #   ROBOT_SETUP_PATH_HOST Host setup directory for robot profile (default: /etc/clearpath/)
 #   ROBOT_SETUP_PATH      Setup path in robot-profile containers (default: /etc/clearpath/)
@@ -38,7 +38,7 @@ services:
         chmod -R a+rwX /setup/path
       "
     volumes:
-      - ${SETUP_PATH_HOST:-./config/.setup_path}:/setup/path
+      - ${SETUP_PATH_HOST:-./config}:/setup/path
       - ./config/robot.yaml:/seed/robot.yaml:ro
 
   sim:
@@ -55,7 +55,7 @@ services:
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
     volumes:
-      - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/
+      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
     healthcheck:
@@ -93,7 +93,7 @@ services:
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
     volumes:
-      - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/:ro
+      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
     depends_on:
@@ -123,7 +123,7 @@ services:
         use_sim_time:=${USE_SIM_TIME:-true}
         setup_path:=${SETUP_PATH:-/home/ros/setup/path/}
     volumes:
-      - ${SETUP_PATH_HOST:-./config/.setup_path}:/home/ros/setup/path/:ro
+      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
     depends_on:
       setup_init:
         condition: service_completed_successfully
