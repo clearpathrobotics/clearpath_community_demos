@@ -10,7 +10,7 @@
 # Override knobs (all optional):
 #   SETUP_PATH_HOST  Host setup directory containing robot.yaml
 #                    (default: ./config)
-#   SETUP_PATH       Setup path in containers (default: /home/ros/setup/path/)
+#   SETUP_PATH       Setup path in containers (default: /etc/clearpath/)
 #   ROBOT_SETUP_PATH_HOST Host setup directory for robot profile (default: /etc/clearpath/)
 #   ROBOT_SETUP_PATH      Setup path in robot-profile containers (default: /etc/clearpath/)
 #   HELLO_LANGUAGE   cpp | python
@@ -31,14 +31,14 @@ services:
     container_name: cpr-setup-init-jazzy
     command: >
       sh -lc "
-        mkdir -p /setup/path &&
-        if [ ! -f /setup/path/robot.yaml ]; then
-          cp /seed/robot.yaml /setup/path/robot.yaml;
+        mkdir -p /etc/clearpath &&
+        if [ ! -f /etc/clearpath/robot.yaml ]; then
+          cp /seed/robot.yaml /etc/clearpath/robot.yaml;
         fi &&
-        chmod -R a+rwX /setup/path
+        chmod -R a+rwX /etc/clearpath
       "
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/setup/path
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath
       - ./config/robot.yaml:/seed/robot.yaml:ro
 
   sim:
@@ -49,13 +49,13 @@ services:
     network_mode: host
     ipc: host
     environment:
-      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       DISPLAY: ${DISPLAY:-:0}
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
     healthcheck:
@@ -87,13 +87,13 @@ services:
     devices:
       - /dev/dri:/dev/dri
     environment:
-      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       DISPLAY: ${DISPLAY:-:0}
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-SUBNET}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
     depends_on:
@@ -116,14 +116,14 @@ services:
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
       HELLO_LANGUAGE: ${HELLO_LANGUAGE:-cpp}
       USE_SIM_TIME: ${USE_SIM_TIME:-true}
-      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
     command: >
       ros2 launch hello_clearpath hello_clearpath.launch.py
         language:=${HELLO_LANGUAGE:-cpp}
         use_sim_time:=${USE_SIM_TIME:-true}
-        setup_path:=${SETUP_PATH:-/home/ros/setup/path/}
+        setup_path:=${SETUP_PATH:-/etc/clearpath}
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/:ro
     depends_on:
       setup_init:
         condition: service_completed_successfully

@@ -20,12 +20,12 @@ services:
     container_name: cpr-setup-init-auto-explore-jazzy
     command: >
       sh -lc "
-        mkdir -p /setup/path &&
-        test -f /setup/path/robot.yaml &&
-        chmod -R a+rwX /setup/path
+        mkdir -p /etc/clearpath &&
+        test -f /etc/clearpath/robot.yaml &&
+        chmod -R a+rwX /etc/clearpath
       "
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/setup/path
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath
 
   sim:
     image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-sim-latest
@@ -34,14 +34,14 @@ services:
     network_mode: host
     ipc: host
     environment:
-      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       DISPLAY: ${DISPLAY:-:0}
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
       ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
       CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
     healthcheck:
@@ -68,7 +68,7 @@ services:
     container_name: cpr-nav2-auto-explore-jazzy
     network_mode: host
     environment:
-      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       USE_SIM_TIME: ${USE_SIM_TIME:-true}
       WAIT_FOR_SIM: ${NAV2_WAIT_FOR_SIM:-true}
       NAV2_ENABLE_SLAM: ${NAV2_ENABLE_SLAM:-true}
@@ -79,7 +79,7 @@ services:
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
       CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/:ro
     healthcheck:
       test:
         - "CMD"
@@ -115,16 +115,16 @@ services:
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
       CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
       WAIT_FOR_SIM: ${WAIT_FOR_SIM:-true}
-      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       USE_SIM_TIME: ${AUTO_EXPLORE_USE_SIM_TIME:-false}
       AUTO_EXPLORE_MAX_GOAL_DISTANCE_M: ${AUTO_EXPLORE_MAX_GOAL_DISTANCE_M:-8.5}
     command: >
       ros2 launch auto_explore_clearpath auto_explore.launch.py
         use_sim_time:=${AUTO_EXPLORE_USE_SIM_TIME:-false}
-        setup_path:=${SETUP_PATH:-/home/ros/setup/path/}
+        setup_path:=${SETUP_PATH:-/etc/clearpath}
         max_goal_distance_m:=${AUTO_EXPLORE_MAX_GOAL_DISTANCE_M:-8.5}
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/:ro
     depends_on:
       setup_init:
         condition: service_completed_successfully
@@ -142,7 +142,7 @@ services:
     devices:
       - /dev/dri:/dev/dri
     environment:
-      SETUP_PATH: ${SETUP_PATH:-/home/ros/setup/path/}
+      SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       DISPLAY: ${DISPLAY:-:0}
       CLEARPATH_VIZ_CONFIG: ${CLEARPATH_VIZ_CONFIG:-navigation}
       ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
@@ -150,7 +150,7 @@ services:
       RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
       CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
     volumes:
-      - ${SETUP_PATH_HOST:-./config}:/home/ros/setup/path/:ro
+      - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
     depends_on:
