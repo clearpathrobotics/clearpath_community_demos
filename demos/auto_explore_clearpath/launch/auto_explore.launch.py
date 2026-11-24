@@ -46,8 +46,23 @@ ARGUMENTS = [
     ),
     DeclareLaunchArgument(
         'goal_timeout_sec',
-        default_value='90.0',
-        description='Cancel active goal if not reached in this many seconds.',
+        default_value='30.0',
+        description='Minimum seconds before an unfinished goal is canceled.',
+    ),
+    DeclareLaunchArgument(
+        'goal_timeout_per_m_sec',
+        default_value='15.0',
+        description='Seconds allowed per meter to the goal, when longer than goal_timeout_sec.',
+    ),
+    DeclareLaunchArgument(
+        'goal_reached_distance_m',
+        default_value='0.6',
+        description='Count a frontier as visited once the robot is this close, in meters.',
+    ),
+    DeclareLaunchArgument(
+        'max_goal_cost',
+        default_value='50',
+        description='Skip frontiers whose Nav2 global costmap cost (0-100) is above this.',
     ),
     DeclareLaunchArgument(
         'max_goal_distance_m',
@@ -63,6 +78,9 @@ def launch_setup(context, *args, **kwargs):
     namespace_arg = LaunchConfiguration('namespace')
     replan_period_sec = LaunchConfiguration('replan_period_sec')
     goal_timeout_sec = LaunchConfiguration('goal_timeout_sec')
+    goal_timeout_per_m_sec = LaunchConfiguration('goal_timeout_per_m_sec')
+    max_goal_cost = LaunchConfiguration('max_goal_cost')
+    goal_reached_distance_m = LaunchConfiguration('goal_reached_distance_m')
     max_goal_distance_m = LaunchConfiguration('max_goal_distance_m')
 
     namespace = namespace_arg.perform(context)
@@ -94,6 +112,9 @@ def launch_setup(context, *args, **kwargs):
                 'use_sim_time': use_sim_time,
                 'replan_period_sec': replan_period_sec,
                 'goal_timeout_sec': goal_timeout_sec,
+                'goal_timeout_per_m_sec': goal_timeout_per_m_sec,
+                'max_goal_cost': max_goal_cost,
+                'goal_reached_distance_m': goal_reached_distance_m,
                 'max_goal_distance_m': max_goal_distance_m,
             }
         ],

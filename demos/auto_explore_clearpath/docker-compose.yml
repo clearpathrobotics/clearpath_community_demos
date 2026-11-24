@@ -13,6 +13,10 @@
 #
 # With NVIDIA GPU:
 #   docker compose -f docker-compose.yml -f docker-compose.nvidia.yaml up --build
+#
+# sim and nav2 use the health checks built into the clearpath_docker images.
+# Every container takes its ROS domain, middleware, and discovery settings from
+# config/robot.yaml (system.ros2), with the CycloneDDS profile config/cyclonedds.xml.
 
 services:
   setup_init:
@@ -20,7 +24,7 @@ services:
     container_name: cpr-setup-init-auto-explore-jazzy
     command: >
       sh -lc "
-        mkdir -p /etc/clearpath &&
+        mkdir -p /etc/clearpath/maps &&
         test -f /etc/clearpath/robot.yaml &&
         chmod -R a+rwX /etc/clearpath
       "
@@ -30,33 +34,18 @@ services:
   sim:
     image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-sim-latest
     container_name: cpr-sim-auto-explore-jazzy
-    user: ros
     network_mode: host
     ipc: host
     environment:
       SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       DISPLAY: ${DISPLAY:-:0}
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
-      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
-      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
-      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
+      XAUTHORITY: /tmp/.Xauthority
+      GAZEBO_STARTUP_TIMEOUT: ${GAZEBO_STARTUP_TIMEOUT:-120}
+      GAZEBO_MAX_RESTARTS: ${GAZEBO_MAX_RESTARTS:-3}
     volumes:
       - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
-    healthcheck:
-      test:
-        - "CMD"
-        - "bash"
-        - "-c"
-        - >-
-          source /opt/ros/jazzy/setup.bash &&
-          timeout 8 ros2 topic echo /clock --once >/dev/null 2>&1 &&
-          ros2 topic list --no-daemon 2>/dev/null | grep -qE '/[^/]+/platform/odom/filtered$$'
-      interval: 10s
-      timeout: 15s
-      retries: 24
-      start_period: 120s
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/tmp/.Xauthority:ro
     depends_on:
       setup_init:
         condition: service_completed_successfully
@@ -74,25 +63,9 @@ services:
       NAV2_ENABLE_SLAM: ${NAV2_ENABLE_SLAM:-true}
       NAV2_SLAM_SYNC: ${NAV2_SLAM_SYNC:-false}
       AUTO_NAV2_STARTUP: ${AUTO_NAV2_STARTUP:-true}
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
-      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
-      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
-      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
     volumes:
       - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/:ro
-    healthcheck:
-      test:
-        - "CMD"
-        - "bash"
-        - "-c"
-        - >-
-          source /opt/ros/jazzy/setup.bash &&
-          ros2 node list --no-daemon 2>/dev/null | grep -qE '/[^/]+/bt_navigator$$' &&
-          ( [[ "${NAV2_ENABLE_SLAM:-false}" != "true" ]] || ros2 node list --no-daemon 2>/dev/null | grep -qE 'slam_toolbox' )
-      interval: 10s
-      timeout: 10s
-      retries: 24
-      start_period: 150s
+      - ${SETUP_PATH_HOST:-./config}/maps:/etc/clearpath/maps:rw  # rw: cpr-nav2 save-map writes here
     depends_on:
       setup_init:
         condition: service_completed_successfully
@@ -102,7 +75,9 @@ services:
     tty: true
 
   auto_explore:
-    image: cpr-auto-explore-clearpath:jazzy-local
+    # Pulls the published image, or builds it here if it isn't published; --build rebuilds it
+    image: ghcr.io/clearpathrobotics/clearpath_community_demos:jazzy-auto_explore_clearpath-latest
+    pull_policy: missing
     container_name: cpr-auto-explore-jazzy
     build:
       context: ../..
@@ -110,17 +85,11 @@ services:
     network_mode: host
     ipc: host
     environment:
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
-      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
-      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
-      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
       WAIT_FOR_SIM: ${WAIT_FOR_SIM:-true}
       SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
-      USE_SIM_TIME: ${AUTO_EXPLORE_USE_SIM_TIME:-false}
-      AUTO_EXPLORE_MAX_GOAL_DISTANCE_M: ${AUTO_EXPLORE_MAX_GOAL_DISTANCE_M:-8.5}
     command: >
       ros2 launch auto_explore_clearpath auto_explore.launch.py
-        use_sim_time:=${AUTO_EXPLORE_USE_SIM_TIME:-false}
+        use_sim_time:=${AUTO_EXPLORE_USE_SIM_TIME:-true}
         setup_path:=${SETUP_PATH:-/etc/clearpath}
         max_goal_distance_m:=${AUTO_EXPLORE_MAX_GOAL_DISTANCE_M:-8.5}
     volumes:
@@ -136,7 +105,6 @@ services:
   viz:
     image: ghcr.io/clearpathrobotics/clearpath_docker:jazzy-viz-latest
     container_name: cpr-viz-auto-explore-jazzy
-    user: ros
     network_mode: host
     ipc: host
     devices:
@@ -144,15 +112,12 @@ services:
     environment:
       SETUP_PATH: ${SETUP_PATH:-/etc/clearpath}
       DISPLAY: ${DISPLAY:-:0}
+      XAUTHORITY: /tmp/.Xauthority
       CLEARPATH_VIZ_CONFIG: ${CLEARPATH_VIZ_CONFIG:-navigation}
-      ROS_DOMAIN_ID: ${ROS_DOMAIN_ID:-0}
-      ROS_AUTOMATIC_DISCOVERY_RANGE: ${ROS_AUTOMATIC_DISCOVERY_RANGE:-LOCALHOST}
-      RMW_IMPLEMENTATION: ${RMW_IMPLEMENTATION:-rmw_cyclonedds_cpp}
-      CYCLONEDDS_URI: '${CYCLONEDDS_URI:-<CycloneDDS><Domain><General><Interfaces><NetworkInterface name="lo"/></Interfaces></General><Discovery><ParticipantIndex>auto</ParticipantIndex><MaxAutoParticipantIndex>512</MaxAutoParticipantIndex></Discovery></Domain></CycloneDDS>}'
     volumes:
       - ${SETUP_PATH_HOST:-./config}:/etc/clearpath/:ro
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
-      - ${XAUTHORITY:-$HOME/.Xauthority}:/home/ros/.Xauthority:ro
+      - ${XAUTHORITY:-$HOME/.Xauthority}:/tmp/.Xauthority:ro
     depends_on:
       setup_init:
         condition: service_completed_successfully

@@ -14,7 +14,7 @@ behaviors, custom payload integrations, and creative use cases.
 - **Documentation** for each demo (this site)
 - **Source code** for each demo, organized under the [`demos/`](https://github.com/clearpathrobotics/clearpath_community_demos/tree/main/demos)
   directory of the repository
-- **Tutorials** describing how to set up your robot, build the demos, and run them
+- **Getting started guides** describing how to set up your robot, build the demos, and run them
 - **Contribution guidelines** for adding your own demo
 
 ## Supported platforms

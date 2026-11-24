@@ -25,7 +25,36 @@ An example
 [`robot.yaml`](https://github.com/clearpathrobotics/clearpath_community_demos/blob/main/demos/hello_clearpath/config/robot.yaml)
 is shipped with the demo as a reference for the
 [`clearpath_config`](https://docs.clearpathrobotics.com/docs/ros/config/yaml/overview/)
-that was used to test it. Update to match your robot before deploying.
+that was used to test it. To use another robot, see
+[Changing the robot](#changing-the-robot).
+
+## Changing the robot
+
+The example `config/robot.yaml` describes a Husky A300. To run the demo on
+your own robot, or on another platform in simulation:
+
+1. **Start from the right file.** On a real robot, use its own `robot.yaml`
+   (`/etc/clearpath/robot.yaml`). For another platform, start from that
+   platform's
+   [`clearpath_config` sample](https://github.com/clearpathrobotics/clearpath_config/tree/jazzy/clearpath_config/sample), for example `j100/j100_default.yaml` for a Jackal.
+   Samples are also installed in `/opt/ros/jazzy/share/clearpath_config/sample/`
+   and in the clearpath_docker images.
+2. **Edit the fields the demo depends on:**
+
+   | Field | What it sets |
+   |-------|--------------|
+   | `serial_number` | The robot's serial number; its prefix (`a300`, `j100`, `w200`, ...) selects the platform |
+   | `system.ros2.namespace` | The robot's namespace, which the demo runs under. If you leave it out, it is derived from the serial number |
+   | `system.ros2.domain_id` | The ROS domain ID, from 0 to 101 |
+   | `system.ros2.middleware` | The middleware settings; keep CycloneDDS (`rmw_cyclonedds_cpp`) for the Docker Compose stack |
+   | `system.hosts` | The robot computer's hostname and IP (real robots only) |
+   | `platform.attachments` | Attachments; they must belong to the platform, which is why another platform starts from its sample |
+
+   See the [`clearpath_config` documentation](https://docs.clearpathrobotics.com/docs/ros/config/yaml/overview/)
+   for every field.
+3. **Use it** natively, as in [Using another robot](#using-another-robot), or
+   with Docker Compose, as in
+   [Using another robot with Docker Compose](#using-another-robot-with-docker-compose).
 
 ## Build
 
@@ -77,6 +106,23 @@ ros2 launch hello_clearpath hello_clearpath.launch.py \
 
 The robot will drive a 1 m × 1 m square and log a message at each corner.
 
+### Using another robot
+
+On a real robot, the demo reads the robot's own `/etc/clearpath/robot.yaml` by
+default, so it already matches the robot. In simulation, put your `robot.yaml`
+in a directory and pass that directory to both the simulator and the demo:
+
+```bash
+ros2 launch clearpath_gz simulation.launch.py setup_path:=/path/to/dir
+
+source ~/hello_clearpath_ws/install/setup.bash
+ros2 launch hello_clearpath hello_clearpath.launch.py \
+    use_sim_time:=true setup_path:=/path/to/dir
+```
+
+After editing `robot.yaml`, restart the simulator: it regenerates the robot
+description and launch files from `robot.yaml` each time it starts.
+
 ## Docker Compose (Jazzy, sim + viz + demo / robot + demo)
 
 The demo folder includes a Jazzy-only compose stack with two profiles:
@@ -120,22 +166,6 @@ cd demos/hello_clearpath
 docker compose --profile robot up
 ```
 
-By default, the stack creates and uses a writable
-`demos/hello_clearpath/config/.setup_path/` directory, auto-seeded from
-`config/robot.yaml`.
-
-For the `robot` profile, the stack uses `/etc/clearpath/robot.yaml` on the
-Linux host by default.
-
-To override the robot configuration, provide a host setup directory containing
-your own `robot.yaml`:
-
-```bash
-cd demos/hello_clearpath
-SETUP_PATH_HOST=/path/to/clearpath_setup docker compose --profile sim up
-ROBOT_SETUP_PATH_HOST=/path/to/clearpath_setup docker compose --profile robot up
-```
-
 By default, `hello_clearpath` services use the published GHCR image:
 
 - `ghcr.io/clearpathrobotics/clearpath_community_demos:jazzy-hello_clearpath-latest`
@@ -145,11 +175,40 @@ The hello container image also ships with a default config at
 so it is usable out-of-the-box. You can still override it by bind-mounting a
 host setup directory and setting `SETUP_PATH` accordingly.
 
-The entrypoint waits for simulation readiness by default before launching the
-demo command. To tune this behavior:
+Environment variables:
 
-- `WAIT_FOR_SIM=true|false` (default: `true`)
-- `WAIT_FOR_TIMEOUT_SEC=<seconds>` (default: `60`)
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `HELLO_LANGUAGE` | `cpp` | Implementation to run: `cpp` or `python` |
+| `USE_SIM_TIME` | sim: `true`, robot: `false` | Use the simulator clock |
+| `WAIT_FOR_SIM` | sim: `true`, robot: `false` | Wait for `/clock` and odometry before starting the demo |
+| `WAIT_FOR_TIMEOUT_SEC` | `120` | Seconds to wait for each of them before starting anyway |
+| `SETUP_PATH_HOST` | `./config` | Host setup directory for the `sim` profile |
+| `ROBOT_SETUP_PATH_HOST` | `/etc/clearpath/` | Host setup directory for the `robot` profile |
+
+The ROS domain ID, middleware, and discovery range come from the `system.ros2`
+section of `robot.yaml` in the setup directory, as on a robot. The `robot`
+profile reads the robot's own `robot.yaml`, so it matches the robot.
+
+### Using another robot with Docker Compose
+
+The `sim` profile uses `demos/hello_clearpath/config/` as the setup directory:
+the simulator reads its `robot.yaml` and writes generated files next to it,
+which git ignores. Either edit `config/robot.yaml`, or put your own
+`robot.yaml` in a directory and pass it with `SETUP_PATH_HOST`. Keep the
+middleware set to CycloneDDS.
+
+The `robot` profile reads `/etc/clearpath/robot.yaml` on the robot, so it
+already matches the robot; `ROBOT_SETUP_PATH_HOST` points it elsewhere.
+
+After editing `robot.yaml`, stop the stack and start it again, so the
+simulator regenerates the robot description and launch files:
+
+```bash
+cd demos/hello_clearpath
+docker compose --profile sim down
+SETUP_PATH_HOST=/path/to/dir docker compose --profile sim up
+```
 
 ## GitHub Image Build
 

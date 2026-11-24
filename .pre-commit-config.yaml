@@ -33,6 +33,8 @@ repos:
     rev: v23.1.1
     hooks:
       - id: clang-format
+        # Not yet in the ROS 2 style of .clang-format
+        exclude: ^demos/unified_manipulation_config_ws/
 
   # Spell checking.
   - repo: https://github.com/streetsidesoftware/cspell-cli

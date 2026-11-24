@@ -1,0 +1,36 @@
+name: Bug report
+description: Something in a demo or the documentation doesn't work as described.
+labels: [bug]
+body:
+  - type: input
+    id: demo
+    attributes:
+      label: Demo
+      description: Which demo or documentation page?
+      placeholder: auto_explore_clearpath
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What did you run, what did you expect, and what happened instead? Include any errors or logs.
+    validations:
+      required: true
+  - type: dropdown
+    id: how
+    attributes:
+      label: How did you run it?
+      options:
+        - Native ROS 2 install
+        - Docker Compose
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Platform (real or simulated), ROS 2 distribution, and Clearpath software version.
+      placeholder: Husky A300 in simulation, ROS 2 Jazzy, clearpath_gz 2.9.4
+    validations:
+      required: true

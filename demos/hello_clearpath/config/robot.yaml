@@ -1,3 +1,12 @@
+# Example robot.yaml for hello_clearpath, tested on a simulated Husky A300.
+# To use another robot, edit (see "Changing the robot" on the demo's page):
+#   serial_number          the robot's serial number; its prefix (a300, j100,
+#                          ...) selects the platform
+#   system.ros2.namespace  the robot's namespace; the demo runs under it
+#   system.ros2.domain_id  the ROS domain ID (0 to 101)
+#   system.hosts           the robot computer's hostname and IP (real robots)
+#   platform.attachments   must belong to the platform; for another platform,
+#                          start from its clearpath_config sample instead
 serial_number: a300-00000
 version: 0
 system:
@@ -8,7 +17,7 @@ system:
     namespace: a300_0000
     domain_id: 0
     middleware:
-      implementation: rmw_fastrtps_cpp
+      implementation: rmw_cyclonedds_cpp
 platform:
   controller: ps4
   attachments:

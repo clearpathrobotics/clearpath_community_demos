@@ -5,27 +5,25 @@
     max-width: none;
 }
 
-// Sidebar header — black background matching the top logo bar.
+// The sidebar header and the logo bar beside it share one height, so their black
+// backgrounds line up.
+$header-height: 110px;
+
+// Black headers: the sidebar's and, on small screens, the top navigation bar.
 .header {
     color: #fff;
     background: #000000;
-    display: inline-block;
-    height: 140px;
 }
 
-.title a {
-    position: relative;
-    top: 45px;
+.sidebar .header {
+    height: $header-height;
+    justify-content: center;
 }
+
 
 a img {
     border: 0;
     outline: none;
-}
-
-.header input {
-    position: relative;
-    top: 45px;
 }
 
 // Full-width black logo bar above the content area.
@@ -38,14 +36,24 @@ a img {
     width: 100%;
 }
 
+// After the base rule, so it wins: the sidebar shows from the theme's medium breakpoint up
+@media (min-width: 768px) {
+    .header-bar-wrap {
+        min-height: $header-height;
+    }
+}
+
 .header-row {
     display: flex;
     align-items: center;
     margin-top: 0;
     height: 100%;
     width: 100%;
-    justify-content: center;
-    padding: 10px 0;
+    padding: 10px 24px 10px 0;
+}
+
+.header-github-link {
+    margin-left: auto;
 }
 
 .header-logo {
@@ -62,9 +70,11 @@ a img {
     margin-top: 3px;
 }
 
+// Logo on the left, GitHub link on the right
 .header-ul {
+    width: 100%;
     height: 100%;
-    overflow: auto;
+    overflow: hidden;
     text-align: center;
     align-items: center;
     display: flex;
@@ -73,10 +83,11 @@ a img {
     padding: 0;
 }
 
+// Scales down on narrow screens, keeping the logo's proportions.
 .cpr-logo {
     background-image: url('{{ site.baseurl }}/media/cpr_logo.png');
-    width: 355px;
-    height: 50px;
+    width: min(355px, 70vw);
+    aspect-ratio: 355 / 50;
 }
 
 .github-logo {

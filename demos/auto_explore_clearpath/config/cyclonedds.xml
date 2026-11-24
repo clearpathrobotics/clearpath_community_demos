@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- CycloneDDS profile for the demo, selected by robot.yaml (system.ros2.middleware.profile).
+     Traffic stays on loopback, so a network change can't interrupt the stack. Host ROS tools
+     need it too: export CYCLONEDDS_URI=file://$PWD/config/cyclonedds.xml -->
+<CycloneDDS xmlns="https://cdds.io/config">
+  <Domain Id="any">
+    <General>
+      <Interfaces>
+        <NetworkInterface name="lo"/>
+      </Interfaces>
+    </General>
+    <Discovery>
+      <!-- LOCALHOST discovery caps a host at 32 participants by default -->
+      <ParticipantIndex>auto</ParticipantIndex>
+      <MaxAutoParticipantIndex>120</MaxAutoParticipantIndex>
+    </Discovery>
+  </Domain>
+</CycloneDDS>
