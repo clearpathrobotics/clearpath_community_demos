@@ -1,15 +1,30 @@
-Language:        Cpp
-BasedOnStyle:  Google
-ColumnLimit: 100
+# ROS 2 code style: the ament_clang_format configuration, which matches the
+# uncrustify and cpplint checks that ament_lint_auto runs with colcon test.
+---
+Language: Cpp
+BasedOnStyle: Google
+
 AccessModifierOffset: -2
 AlignAfterOpenBracket: AlwaysBreak
-BreakBeforeBraces: Allman
+BraceWrapping:
+  AfterClass: true
+  AfterFunction: true
+  AfterNamespace: true
+  AfterStruct: true
+  AfterEnum: true
+BreakBeforeBraces: Custom
+ColumnLimit: 100
 ConstructorInitializerIndentWidth: 0
 ContinuationIndentWidth: 2
 DerivePointerAlignment: false
 PointerAlignment: Middle
 ReflowComments: false
-IncludeBlocks: Preserve
+# Also keep clang-format's output acceptable to ament_uncrustify, which wants no
+# single-line function or lambda bodies and the initializer list on its own line
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortLambdasOnASingleLine: Empty
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: Never
 
 ---
 Language: Proto

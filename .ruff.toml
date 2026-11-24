@@ -34,10 +34,13 @@ ignore = ['D100','D101','D102','D103','D104','D105','D106','D107','D203','D212',
 
 [lint.per-file-ignores]
 "**/launch/*.launch.py" = ["INP001"]
+"**/test/*.py" = ["INP001", "S101"] # pytest tests use assert, without __init__.py
 
 [lint.isort]
 force-sort-within-sections = true
 order-by-type = false
+# Demos have local launch/ directories; keep the ROS launch package third-party
+known-third-party = ["launch"]
 
 [format]
 preview = true

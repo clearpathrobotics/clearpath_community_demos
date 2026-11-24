@@ -67,6 +67,7 @@
     "XAUTHORITY",
     "Xauthority",
     "freeglut",
+    "frombuffer",
     "frontmatter",
     "gecos",
     "gname",
@@ -116,6 +117,7 @@
     "pymeshlab",
     "pyglet",
     "pytest",
+    "PYTHONPATH",
     "qpsolvers",
     "quadprog",
     "qtqp",
@@ -162,6 +164,12 @@
     "xmls",
     "xmlschema",
     "yaw",
-    "yourdfpy"
+    "yourdfpy",
+    "endcase",
+    "endfor",
+    "forloop",
+    "noreferrer",
+    "rindex",
+    "uncrustify"
   ]
 }

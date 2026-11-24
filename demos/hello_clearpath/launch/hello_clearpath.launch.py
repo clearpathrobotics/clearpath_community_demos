@@ -24,12 +24,11 @@ declared in the robot's ``robot.yaml`` (read from ``setup_path``), and
 from pathlib import Path
 
 from clearpath_config.clearpath_config import ClearpathConfig
-from launch_ros.actions import Node, PushRosNamespace
-
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, GroupAction, OpaqueFunction
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch_ros.actions import Node, PushRosNamespace
 
 ARGUMENTS = [
     DeclareLaunchArgument(

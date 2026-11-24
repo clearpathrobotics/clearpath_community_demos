@@ -13,6 +13,7 @@ jobs:
         ros_distro: [jazzy]
         demo:
           - hello_clearpath
+          - auto_explore_clearpath
     container:
       image: ros:${{ matrix.ros_distro }}-ros-base
     name: ${{ matrix.demo }} (${{ matrix.ros_distro }})
@@ -42,3 +43,9 @@ jobs:
         run: |
           source /opt/ros/${{ matrix.ros_distro }}/setup.bash
           colcon build --packages-up-to ${{ matrix.demo }}
+      - name: Test
+        shell: bash
+        run: |
+          source /opt/ros/${{ matrix.ros_distro }}/setup.bash
+          colcon test --packages-select ${{ matrix.demo }}
+          colcon test-result --verbose

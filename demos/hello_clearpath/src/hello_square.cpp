@@ -1,13 +1,24 @@
-// Copyright (c) 2026, Clearpath Robotics, by Rockwell Automation, and
-// community contributors.
-// Licensed under the Apache License, Version 2.0.
+// Copyright 2026 Rockwell Automation Technologies, Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 #include <cmath>
+#include <functional>
 #include <memory>
 
-#include <geometry_msgs/msg/twist_stamped.hpp>
-#include <nav_msgs/msg/odometry.hpp>
-#include <rclcpp/rclcpp.hpp>
+#include "geometry_msgs/msg/twist_stamped.hpp"
+#include "nav_msgs/msg/odometry.hpp"
+#include "rclcpp/rclcpp.hpp"
 
 namespace
 {
@@ -28,19 +39,25 @@ double yaw_from_quaternion(const geometry_msgs::msg::Quaternion & q)
   return std::atan2(siny_cosp, cosy_cosp);
 }
 
-double angle_diff(double a, double b) { return std::atan2(std::sin(a - b), std::cos(a - b)); }
+double angle_diff(double a, double b)
+{
+  return std::atan2(std::sin(a - b), std::cos(a - b));
+}
 }  // namespace
 
 class HelloSquare : public rclcpp::Node
 {
 public:
-  HelloSquare() : rclcpp::Node("hello_square")
+  HelloSquare()
+  : rclcpp::Node("hello_square")
   {
     cmd_pub_ = create_publisher<geometry_msgs::msg::TwistStamped>("cmd_vel", 10);
     odom_sub_ = create_subscription<nav_msgs::msg::Odometry>(
       "platform/odom/filtered", rclcpp::SensorDataQoS(),
-      [this](nav_msgs::msg::Odometry::ConstSharedPtr msg) { on_odom(*msg); });
-    timer_ = create_wall_timer(kTickPeriod, [this] { tick(); });
+      [this](nav_msgs::msg::Odometry::ConstSharedPtr msg) {
+        on_odom(*msg);
+      });
+    timer_ = create_wall_timer(kTickPeriod, std::bind(&HelloSquare::tick, this));
     RCLCPP_INFO(get_logger(), "Hello, Clearpath! Driving a 1m x 1m square.");
   }
 
@@ -56,8 +73,7 @@ private:
     x_ = msg.pose.pose.position.x;
     y_ = msg.pose.pose.position.y;
     yaw_ = yaw_from_quaternion(msg.pose.pose.orientation);
-    if (!have_odom_)
-    {
+    if (!have_odom_) {
       start_x_ = x_;
       start_y_ = y_;
       start_yaw_ = yaw_;
@@ -74,7 +90,10 @@ private:
     cmd_pub_->publish(msg);
   }
 
-  double distance_traveled() const { return std::hypot(x_ - start_x_, y_ - start_y_); }
+  double distance_traveled() const
+  {
+    return std::hypot(x_ - start_x_, y_ - start_y_);
+  }
 
   double forward_progress() const
   {
@@ -83,23 +102,21 @@ private:
     return dx * std::cos(start_yaw_) + dy * std::sin(start_yaw_);
   }
 
-  double heading_change() const { return std::abs(angle_diff(yaw_, start_yaw_)); }
+  double heading_change() const
+  {
+    return std::abs(angle_diff(yaw_, start_yaw_));
+  }
 
   void tick()
   {
-    if (!have_odom_)
-    {
+    if (!have_odom_) {
       return;
     }
 
-    if (phase_ == Phase::kForward)
-    {
-      if (distance_traveled() + kPositionToleranceM < kSideLengthM)
-      {
-        if (!direction_checked_ && distance_traveled() >= kDirectionProbeDistanceM)
-        {
-          if (forward_progress() < -kDirectionFlipThresholdM)
-          {
+    if (phase_ == Phase::kForward) {
+      if (distance_traveled() + kPositionToleranceM < kSideLengthM) {
+        if (!direction_checked_ && distance_traveled() >= kDirectionProbeDistanceM) {
+          if (forward_progress() < -kDirectionFlipThresholdM) {
             linear_sign_ = -1.0;
             RCLCPP_WARN(
               get_logger(),
@@ -109,27 +126,19 @@ private:
           direction_checked_ = true;
         }
         publish_cmd(linear_sign_ * kLinearSpeed, 0.0);
-      }
-      else
-      {
+      } else {
         publish_cmd(0.0, 0.0);
         RCLCPP_INFO(get_logger(), "Side %d complete.", side_ + 1);
         phase_ = Phase::kTurn;
         start_yaw_ = yaw_;
       }
-    }
-    else
-    {
-      if (heading_change() + kHeadingToleranceRad < kTurnAngleRad)
-      {
+    } else {
+      if (heading_change() + kHeadingToleranceRad < kTurnAngleRad) {
         publish_cmd(0.0, kAngularSpeed);
-      }
-      else
-      {
+      } else {
         publish_cmd(0.0, 0.0);
         ++side_;
-        if (side_ >= 4)
-        {
+        if (side_ >= 4) {
           RCLCPP_INFO(get_logger(), "Square complete.");
           rclcpp::shutdown();
           return;

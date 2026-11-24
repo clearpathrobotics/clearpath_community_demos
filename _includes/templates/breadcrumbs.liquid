@@ -1,0 +1,40 @@
+{%- comment %}
+    Local override of jekyll-rtd-theme's breadcrumbs.liquid: shows page and section titles instead
+    of file paths, and edits on main, the branch the site is built from.
+{% endcomment -%}
+<div class="navigation-top d-flex flex-justify-between">
+    <ul class="breadcrumb" role="navigation" aria-label="breadcrumbs navigation">
+        <li class="breadcrumb-item">
+            <a class="no-underline" href="{{ site.baseurl }}/">Home</a>
+        </li>
+        {%- case page.url -%}
+            {%- when "/search.html" -%}
+                <li class="breadcrumb-item" aria-current="page">{{ __.search | default: "Search" }}</li>
+            {%- when "/404.html" -%}
+                <li class="breadcrumb-item" aria-current="page">404</li>
+            {%- else -%}
+                {%- assign blocks = page.path | split: "/" -%}
+                {%- assign dir = "" -%}
+                {%- for block in blocks -%}
+                    {%- if forloop.last -%}
+                        {%- unless block == "README.md" or page.path == "index.md" -%}
+                            <li class="breadcrumb-item" aria-current="page">{{ page.title | default: page.name }}</li>
+                        {%- endunless -%}
+                    {%- else -%}
+                        {%- assign dir = dir | append: block | append: "/" -%}
+                        {%- assign readme = dir | append: "README.md" -%}
+                        {%- assign section = site.pages | where: "path", readme | first -%}
+                        {%- assign label = section.title | default: block -%}
+                        {%- if forloop.rindex == 2 and blocks.last == "README.md" -%}
+                            <li class="breadcrumb-item" aria-current="page">{{ label }}</li>
+                        {%- else -%}
+                            <li class="breadcrumb-item"><a href="{{ site.baseurl }}/{{ dir }}">{{ label }}</a></li>
+                        {%- endif -%}
+                    {%- endif -%}
+                {%- endfor -%}
+        {%- endcase -%}
+    </ul>
+    <a class="edit" href="https://github.com/{{ site.repository }}/edit/main/{{ page.path }}" title="{{ __.edit | default: 'Edit on GitHub' }}" rel="noreferrer" target="_blank">
+        <i class="fa fa-edit"></i>
+    </a>
+</div>

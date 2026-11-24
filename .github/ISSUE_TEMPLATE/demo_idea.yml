@@ -1,0 +1,17 @@
+name: Demo idea
+description: Suggest a new demo, or propose one you'd like to contribute.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: Idea
+      description: What would the demo show, and on which platform(s)?
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribute
+    attributes:
+      label: Contributing it
+      options:
+        - label: I'd like to build this demo myself

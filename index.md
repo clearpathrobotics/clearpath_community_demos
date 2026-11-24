@@ -5,7 +5,7 @@
 </figure>
 
 Welcome to the **Clearpath Community Demos**, a collection of community-contributed
-demos, examples, and tutorials for
+demos and examples for
 [Clearpath Robotics, by Rockwell Automation](https://clearpathrobotics.com)
 platforms — including Husky, Jackal, Dingo, Warthog, Ridgeback, and more.
 

@@ -24,6 +24,7 @@ from geometry_msgs.msg import PoseStamped, Quaternion
 from nav2_msgs.action import NavigateToPose
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.srv import GetMap
+import numpy as np
 import rclpy
 from rclpy.action import ActionClient
 from rclpy.duration import Duration
@@ -33,7 +34,7 @@ from rclpy.time import Time
 from tf2_ros import Buffer, LookupException, TransformException
 from tf2_ros.transform_listener import TransformListener
 
-GridPoint = tuple[int, int]
+from .frontiers import goal_timeout_sec, Grid, select_frontier
 
 
 class FrontierExplorer(Node):
@@ -43,28 +44,41 @@ class FrontierExplorer(Node):
         super().__init__('frontier_explorer')
 
         self.declare_parameter('replan_period_sec', 2.0)
-        self.declare_parameter('goal_timeout_sec', 90.0)
+        self.declare_parameter('goal_timeout_sec', 30.0)
+        self.declare_parameter('goal_timeout_per_m_sec', 15.0)
         self.declare_parameter('frontier_neighbor_unknown_min', 1)
         self.declare_parameter('obstacle_inflation_cells', 3)
+        # Nav2 costmap cost (0-100) above which a frontier is too close to obstacles to target
+        self.declare_parameter('max_goal_cost', 50)
         self.declare_parameter('min_goal_distance_m', 1.0)
         self.declare_parameter('max_goal_distance_m', 20.0)
         self.declare_parameter('goal_revisit_distance_m', 1.0)
+        # Close enough to count a frontier as visited; above the Nav2 progress checker radius, so
+        # the robot isn't left creeping into the exact goal pose
+        self.declare_parameter('goal_reached_distance_m', 0.6)
         self.declare_parameter('exploration_complete_cycles', 8)
 
         self._replan_period_sec = self.get_parameter('replan_period_sec').value
         self._goal_timeout_sec = self.get_parameter('goal_timeout_sec').value
+        self._goal_timeout_per_m_sec = self.get_parameter('goal_timeout_per_m_sec').value
         self._frontier_neighbor_unknown_min = self.get_parameter(
             'frontier_neighbor_unknown_min',
         ).value
         self._obstacle_inflation_cells = self.get_parameter('obstacle_inflation_cells').value
+        self._max_goal_cost = self.get_parameter('max_goal_cost').value
         self._min_goal_distance_m = self.get_parameter('min_goal_distance_m').value
         self._max_goal_distance_m = self.get_parameter('max_goal_distance_m').value
         self._goal_revisit_distance_m = self.get_parameter('goal_revisit_distance_m').value
+        self._goal_reached_distance_m = self.get_parameter('goal_reached_distance_m').value
         self._exploration_complete_cycles = self.get_parameter('exploration_complete_cycles').value
 
         self._latest_map: OccupancyGrid | None = None
+        self._latest_costmap: OccupancyGrid | None = None
         self._goal_sent_at: Time | None = None
+        self._goal_timeout = Duration(seconds=self._goal_timeout_sec)
         self._goal_xy: tuple[float, float] | None = None
+        self._cancel_requested = False
+        self._close_enough = False
         self._visited_goals: deque[tuple[float, float]] = deque(maxlen=100)
         self._no_frontier_cycles = 0
         self._reported_waiting_for_map = False
@@ -80,6 +94,13 @@ class FrontierExplorer(Node):
             OccupancyGrid,
             'map',
             self._on_map,
+            map_qos,
+        )
+        # Nav2's global costmap encodes the robot footprint, so goals it marks blocked are skipped
+        self._costmap_sub = self.create_subscription(
+            OccupancyGrid,
+            'global_costmap/costmap',
+            self._on_costmap,
             map_qos,
         )
 
@@ -98,6 +119,9 @@ class FrontierExplorer(Node):
         self._latest_map = msg
         self._reported_waiting_for_map = False
 
+    def _on_costmap(self, msg: OccupancyGrid) -> None:
+        self._latest_costmap = msg
+
     def _on_timer(self) -> None:
         if self._latest_map is None:
             self._request_map()
@@ -114,8 +138,8 @@ class FrontierExplorer(Node):
 
         self._reported_waiting_for_nav2 = False
 
-        if self._goal_handle is not None:
-            self._check_goal_timeout()
+        if self._goal_xy is not None:
+            self._check_active_goal()
             return
 
         robot_xy = self._robot_position_in_map()
@@ -159,24 +183,45 @@ class FrontierExplorer(Node):
         self._latest_map = response.map
         self._reported_waiting_for_map = False
 
-    def _check_goal_timeout(self) -> None:
-        if self._goal_sent_at is None:
+    def _check_active_goal(self) -> None:
+        # Nothing to do until Nav2 accepts the goal, or while a cancel is in flight
+        if self._goal_handle is None or self._cancel_requested:
             return
 
-        elapsed = self.get_clock().now() - self._goal_sent_at
-        if elapsed > Duration(seconds=self._goal_timeout_sec):
+        robot_xy = self._robot_position_in_map()
+        if (
+            robot_xy is not None
+            and math.hypot(
+                self._goal_xy[0] - robot_xy[0],
+                self._goal_xy[1] - robot_xy[1],
+            )
+            <= self._goal_reached_distance_m
+        ):
+            self._close_enough = True
+            self._cancel_goal()
+        elif self.get_clock().now() - self._goal_sent_at > self._goal_timeout:
             self.get_logger().warn('goal timeout reached, canceling and replanning')
-            cancel_future = self._goal_handle.cancel_goal_async()
-            cancel_future.add_done_callback(self._on_cancel_done)
+            self._cancel_goal()
+
+    def _cancel_goal(self) -> None:
+        self._cancel_requested = True
+        self._goal_handle.cancel_goal_async().add_done_callback(self._on_cancel_done)
 
     def _on_cancel_done(self, future) -> None:
+        # The goal is cleared in _on_goal_result once Nav2 reports it canceled
         try:
-            _ = future.result()
+            future.result()
         except Exception as exc:
             self.get_logger().warn(f'failed to cancel goal cleanly: {exc}')
+            self._clear_goal()
+
+    def _clear_goal(self) -> None:
         self._goal_handle = None
         self._result_future = None
         self._goal_sent_at = None
+        self._goal_xy = None
+        self._cancel_requested = False
+        self._close_enough = False
 
     def _robot_position_in_map(self) -> tuple[float, float] | None:
         map_frame = self._latest_map.header.frame_id or 'map'
@@ -197,111 +242,33 @@ class FrontierExplorer(Node):
 
         return (tf.transform.translation.x, tf.transform.translation.y)
 
+    @staticmethod
+    def _to_grid(msg: OccupancyGrid) -> Grid:
+        info = msg.info
+        data = np.frombuffer(msg.data, dtype=np.int8).reshape(info.height, info.width)
+        return Grid(data, info.origin.position.x, info.origin.position.y, info.resolution)
+
     def _select_frontier_goal(
         self,
         occ: OccupancyGrid,
         robot_xy: tuple[float, float],
     ) -> tuple[float, float] | None:
-        width = occ.info.width
-        height = occ.info.height
-        resolution = occ.info.resolution
-        origin_x = occ.info.origin.position.x
-        origin_y = occ.info.origin.position.y
-
-        data: list[int] = list(occ.data)
-        robot_mx = int((robot_xy[0] - origin_x) / resolution)
-        robot_my = int((robot_xy[1] - origin_y) / resolution)
-
-        best_score = -1.0
-        best_goal: GridPoint | None = None
-
-        for my in range(1, height - 1):
-            for mx in range(1, width - 1):
-                idx = my * width + mx
-                if data[idx] != 0:
-                    continue
-
-                unknown_neighbors = 0
-                occupied_neighbor = False
-                for ny in range(my - 1, my + 2):
-                    for nx in range(mx - 1, mx + 2):
-                        nidx = ny * width + nx
-                        nval = data[nidx]
-                        if nval == -1:
-                            unknown_neighbors += 1
-                        elif nval > 50:
-                            occupied_neighbor = True
-
-                if unknown_neighbors < self._frontier_neighbor_unknown_min:
-                    continue
-
-                if occupied_neighbor:
-                    continue
-
-                if not self._is_safe_from_obstacles(
-                    data,
-                    width,
-                    height,
-                    mx,
-                    my,
-                    self._obstacle_inflation_cells,
-                ):
-                    continue
-
-                dx = mx - robot_mx
-                dy = my - robot_my
-                dist_cells = math.hypot(dx, dy)
-                dist_m = dist_cells * resolution
-
-                if dist_m < self._min_goal_distance_m or dist_m > self._max_goal_distance_m:
-                    continue
-
-                gx = origin_x + (mx + 0.5) * resolution
-                gy = origin_y + (my + 0.5) * resolution
-                if self._was_recently_visited(gx, gy):
-                    continue
-
-                score = dist_m + (0.5 * float(unknown_neighbors))
-                if score > best_score:
-                    best_score = score
-                    best_goal = (mx, my)
-
-        if best_goal is None and self._visited_goals:
+        goal = select_frontier(
+            self._to_grid(occ),
+            robot_xy,
+            min_unknown_neighbors=self._frontier_neighbor_unknown_min,
+            clearance_cells=self._obstacle_inflation_cells,
+            min_distance_m=self._min_goal_distance_m,
+            max_distance_m=self._max_goal_distance_m,
+            visited=self._visited_goals,
+            revisit_distance_m=self._goal_revisit_distance_m,
+            costmap=self._to_grid(self._latest_costmap) if self._latest_costmap else None,
+            max_goal_cost=self._max_goal_cost,
+        )
+        if goal is None and self._visited_goals:
             self.get_logger().info('no unseen frontier left, clearing goal history and retrying')
             self._visited_goals.clear()
-            return None
-
-        if best_goal is None:
-            return None
-
-        gx = origin_x + (best_goal[0] + 0.5) * resolution
-        gy = origin_y + (best_goal[1] + 0.5) * resolution
-        return (gx, gy)
-
-    @staticmethod
-    def _is_safe_from_obstacles(
-        data: list[int],
-        width: int,
-        height: int,
-        mx: int,
-        my: int,
-        radius: int,
-    ) -> bool:
-        min_x = max(0, mx - radius)
-        max_x = min(width - 1, mx + radius)
-        min_y = max(0, my - radius)
-        max_y = min(height - 1, my + radius)
-
-        for ny in range(min_y, max_y + 1):
-            row = ny * width
-            for nx in range(min_x, max_x + 1):
-                if data[row + nx] > 50:
-                    return False
-        return True
-
-    def _was_recently_visited(self, x: float, y: float) -> bool:
-        threshold = self._goal_revisit_distance_m
-        return any(math.hypot(x - vx, y - vy) < threshold for vx, vy in self._visited_goals)
+        return goal
 
     def _send_goal(self, goal_xy: tuple[float, float], robot_xy: tuple[float, float]) -> None:
         goal = NavigateToPose.Goal()
@@ -321,50 +288,58 @@ class FrontierExplorer(Node):
         send_future.add_done_callback(self._on_goal_response)
         self._goal_sent_at = self.get_clock().now()
         self._goal_xy = goal_xy
+        distance = math.hypot(goal_xy[0] - robot_xy[0], goal_xy[1] - robot_xy[1])
+        self._goal_timeout = Duration(
+            seconds=goal_timeout_sec(
+                distance,
+                self._goal_timeout_sec,
+                self._goal_timeout_per_m_sec,
+            ),
+        )
 
     def _on_goal_response(self, future) -> None:
         try:
             goal_handle = future.result()
         except Exception as exc:
             self.get_logger().warn(f'goal request failed: {exc}')
-            self._goal_handle = None
-            self._result_future = None
-            self._goal_sent_at = None
+            self._clear_goal()
             return
 
         if not goal_handle.accepted:
             self.get_logger().warn('frontier goal rejected by Nav2')
-            self._goal_handle = None
-            self._result_future = None
-            self._goal_sent_at = None
+            self._clear_goal()
             return
 
         self._goal_handle = goal_handle
         self._result_future = goal_handle.get_result_async()
-        self._result_future.add_done_callback(self._on_goal_result)
+        self._result_future.add_done_callback(
+            lambda result, handle=goal_handle: self._on_goal_result(result, handle),
+        )
 
-    def _on_goal_result(self, future) -> None:
+    def _on_goal_result(self, future, goal_handle) -> None:
+        if goal_handle is not self._goal_handle:
+            return
+
         status = GoalStatus.STATUS_UNKNOWN
         try:
-            result = future.result()
-            status = result.status
+            status = future.result().status
         except Exception as exc:
             self.get_logger().warn(f'goal result failed: {exc}')
 
-        if self._goal_xy is not None:
-            self._visited_goals.append(self._goal_xy)
+        self._visited_goals.append(self._goal_xy)
 
         if status == GoalStatus.STATUS_SUCCEEDED:
             self.get_logger().info('frontier goal reached')
+        elif status == GoalStatus.STATUS_CANCELED and self._close_enough:
+            self.get_logger().info(
+                f'frontier goal reached (within {self._goal_reached_distance_m:.1f} m)',
+            )
         elif status == GoalStatus.STATUS_CANCELED:
             self.get_logger().warn('frontier goal canceled')
         else:
             self.get_logger().warn(f'frontier goal finished with status {status}')
 
-        self._goal_handle = None
-        self._result_future = None
-        self._goal_sent_at = None
-        self._goal_xy = None
+        self._clear_goal()
 
     @staticmethod
     def _yaw_to_quaternion(yaw: float) -> Quaternion:

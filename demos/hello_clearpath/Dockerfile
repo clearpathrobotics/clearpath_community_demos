@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 # ---------------------------------------------------------------------------
 # hello_clearpath – Dockerfile
-# Base: ROS 2 Jazzy desktop
+# Builds on ros-base, runs on the Clearpath base image (ROS 2 Jazzy)
 # ---------------------------------------------------------------------------
 ARG ROS_DISTRO=jazzy
 ARG CPR_BASE_IMAGE=ghcr.io/clearpathrobotics/clearpath_docker

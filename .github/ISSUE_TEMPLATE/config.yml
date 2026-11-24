@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Clearpath robot support
+    url: https://docs.clearpathrobotics.com/
+    about: These demos aren't officially supported. For help with your robot itself, see the Clearpath documentation.

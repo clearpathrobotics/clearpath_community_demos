@@ -1,6 +1,6 @@
 # Clearpath Community Demos
 
-A community-maintained collection of demos, examples, and tutorials for
+A community-maintained collection of demos and examples for
 [Clearpath Robotics, by Rockwell Automation](https://clearpathrobotics.com)
 platforms.
 
@@ -38,7 +38,6 @@ This repository hosts both:
 ├── overview/             # Docs: project overview
 ├── getting_started/      # Docs: prerequisites, building, running
 ├── demos_docs/           # Docs: one page per demo
-├── tutorials/            # Docs: longer walkthroughs
 ├── contributing/         # Docs: how to contribute
 ├── media/                # Docs: images and figures
 ├── _config.yml           # Jekyll site configuration
@@ -75,18 +74,24 @@ The site uses the [`clearpathrobotics/jekyll-rtd-theme`](https://github.com/clea
 remote theme so it matches the Clearpath Robotics, by Rockwell Automation
 branding used by the rest of the Clearpath documentation.
 
-Install Ruby 3.2, then:
+Preview it in the repository's Dev Container, or with Ruby 3.2 on the host:
 
 ```bash
 make           # install bundler and gems
-make server    # serve at http://127.0.0.1:4000/clearpath_community_demos
+make server    # serve at http://127.0.0.1:4000/clearpath_community_demos/
 ```
+
+See [Local docs development](contributing/README.md#local-docs-development)
+for both setups.
 
 ## Contributing
 
 Contributions are welcome — please see the
 [Contributing](contributing/README.md) page for guidelines on adding a new
 demo or improving an existing one.
+
+To report a bug or suggest a demo, open an
+[issue](https://github.com/clearpathrobotics/clearpath_community_demos/issues/new/choose).
 
 ## License
 
